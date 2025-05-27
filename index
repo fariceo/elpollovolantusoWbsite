@@ -149,8 +149,6 @@ $menu = $conexion->query($buscar_menu);
         <th>Imagen</th>
         <th>Producto</th>
         <th>Precio</th>
-        <th>Detalles</th>
-        <th>Acción</th>
       </tr>
     </thead>
     <tbody>
@@ -166,35 +164,37 @@ $resultado = $conexion->query($sql);
 
 if ($resultado && $resultado->num_rows > 0) {
   while ($fila = $resultado->fetch_assoc()) {
-      $producto = htmlspecialchars($fila['producto']);
-      $precio = number_format(floatval($fila['precio']), 2);
-      $detalles = htmlspecialchars($fila['detalles'] ?? '');
-      $imgNombre = $fila['img'] ?? '';
+    $producto = htmlspecialchars($fila['producto']);
+    $precio = number_format(floatval($fila['precio']), 2);
+    $detalles = htmlspecialchars($fila['detalles'] ?? '');
+    $imgNombre = $fila['img'] ?? '';
+    $rutaImg = "imagenes/" . $imgNombre;
 
-      $rutaImg = "imagenes/" . $imgNombre;
+    if ($imgNombre && file_exists($rutaImg)) {
+        // Añadimos los atributos data-* necesarios
+        $imgTag = "<img src='$rutaImg' alt='$producto' class='menu-img imgProducto' 
+                    data-producto=\"$producto\" 
+                    data-precio=\"$precio\" 
+                    data-detalles=\"$detalles\" 
+                    data-imagen=\"$rutaImg\">";
+    } else {
+        $imgTag = "<span>Sin imagen</span>";
+    }
 
-      if ($imgNombre && file_exists($rutaImg)) {
-          $imgTag = "<img src='$rutaImg' alt='$producto' class='menu-img'>";
-      } else {
-          $imgTag = "<span>Sin imagen</span>";
-      }
+    echo "<tr id='tr1'>";
+    echo "<td>$imgTag</td>";
+    echo "<td>$producto</td>";
+    echo "<td>$$precio</td>";
+    echo "</tr>";
 
-      echo "<tr id='tr1'>";
-      echo "<td>$imgTag</td>";
-      echo "<td>$producto</td>";
-      echo "<td>$$precio</td>";
-      echo "<td>$detalles</td>";
-      echo "</tr>";
-      echo "<tr>";
-      echo "<td><button class='agregar-btn btnAgregar' data-producto=\"$producto\" data-precio=\"" . floatval($fila['precio']) . "\">Agregar</button></td>";
-      echo "</tr>";
-  }
-} else {
-  echo "<tr><td colspan='5'>No hay productos disponibles</td></tr>";
+    echo "<tr>";
+    echo "<td><button class='agregar-btn btnAgregar' data-producto=\"$producto\" data-precio=\"" . floatval($fila['precio']) . "\">Agregar</button></td>";
+    echo "</tr>";
 }
 
-$conexion->close();
 
+$conexion->close();
+}
 ?>
     </tbody>
   </table>
@@ -213,6 +213,7 @@ function agregarProducto(producto, precio) {
   <img src="" alt="Imagen ampliada" id="imgAmpliada">
   <div id="detallesProducto" style="font-size: 18px; font-weight: bold;"></div>
 </div>
+
 
 
 </body>
