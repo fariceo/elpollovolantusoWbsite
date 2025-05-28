@@ -1,220 +1,107 @@
 <?php
 session_start();
-?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inicio</title>
-    <link rel="stylesheet" href="css/index.css">
-    <script src="js/index.js"></script>
-
-</head>
-
-
-<?php
-
-
 include("conexion.php");
 
-if ($conexion->connect_error) {
-    die("Conexión fallida: " . $conexion->connect_error);
+// Obtener una categoría aleatoria
+$categoriaAleatoria = "";
+$sql = "SELECT DISTINCT categoria FROM menu ORDER BY RAND() LIMIT 1";
+$result = mysqli_query($conexion, $sql);
+if ($row = mysqli_fetch_assoc($result)) {
+    $categoriaAleatoria = $row['categoria'];
 }
-
-$buscar_menu = "SELECT producto, precio,detalles,img FROM menu";
-$menu = $conexion->query($buscar_menu);
 ?>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
 
-
+<meta charset="UTF-8" name="viewport" content="width=device-width">
+    <title>Menú del Restaurante</title>
+    <link rel="stylesheet" href="css/index.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        const categoriaInicial = "<?php echo $categoriaAleatoria; ?>";
+    </script>
+    <script src="js/index.js" defer></script>
+</head>
 <body>
+    <h2 id="textoEncabezado">
+        <a href="admin.php"><img id='imgLogo' src="imagenes/logo.jpeg" ></a>
+        Menú del Restaurante
+    </h2>
 
-<h2 id="textoEncabezado">
+    <button id="btnMenuHamburguesa">&#9776;</button>
 
-  <!-- Logo circular -->
-  <a href="admin.php"><img id='imgLogo' src="imagenes/logo.jpeg" ></a>
+    <?php if (isset($_SESSION['usuario'])): ?>
+        <div>
+            <a id="cerrarSesion" style="font-weight: bold; font-size: 18px; text-align:center;">
+                👤 Usuario : <?php echo htmlspecialchars($_SESSION['usuario']); ?>
+            </a>
+            <input type="hidden" id="pedidoId" name="pedidoId" value="<?php echo $_SESSION['usuario']; ?>">
 
-  Menú del Restaurante
-</h2>
+            <?php
+            $usuarioSesion = $_SESSION['usuario'];
+            $consulta = $conexion->prepare("SELECT COUNT(*) as cantidad FROM pedidos WHERE usuario = ? AND estado != 2");
+            $consulta->bind_param("s", $usuarioSesion);
+            $consulta->execute();
+            $resultado = $consulta->get_result();
+            $datos = $resultado->fetch_assoc();
+            $pedidosPendientes = $datos['cantidad'];
+            ?>
 
+            <div style="display: flex; align-items: center; justify-content: flex-end; margin-right: 10%; cursor:pointer;">
+                <div id="n_productos">
+                    <?php echo $pedidosPendientes; ?>
+                </div>
+                <a href="asi_sistema/info/carrito/carrito.php" style="margin-right: 10%; float:right; font-size: 28px; text-decoration: none;">🛒</a>
+            </div>
+        </div>
+        <br>
+    <?php else: ?>
+        <div style="text-align:center; margin-bottom: 20px; font-size: 18px;">
+            <label for="pedidoId" style="font-weight:bold; font-size:16px;">ID del Pedido: </label>
+            <input type="text" id="pedidoId" name="pedidoId" placeholder="Ingrese el ID del pedido" style="padding:5px; font-size:16px; width: 200px;">
+            <button id="guardarUsuario" style="padding: 6px 12px; margin-left: 10px;">Intro</button>
+            <div id="errorPedidoId" style="color:red; margin-top:5px;"></div>
+        </div>
+    <?php endif; ?>
 
-<!--menu hamburguesa-->
-<button id="btnMenuHamburguesa">
-    &#9776; <!-- icono hamburguesa -->
-  </button>
-
-
-
-
-
-<!-- Mostrar usuario actual si ya se ingresó -->
-<?php if (isset($_SESSION['usuario'])): ?>
-    <div>
-    <a id="cerrarSesion" style="font-weight: bold; font-size: 18px; text-align:center;">
-        👤 Usuario : <?php echo htmlspecialchars($_SESSION['usuario']); ?>
-        
-    </a>
-    <?php $usuarioSesion =$_SESSION['usuario'];?>
-    <input type="hidden" id="pedidoId" name="pedidoId" value="<?php echo  $usuarioSesion ?>">
-
-    <?php
-
-    $usuarioSesion = $_SESSION['usuario'];
-    $consulta = $conexion->prepare("SELECT COUNT(*) as cantidad FROM pedidos WHERE usuario = ? AND estado != 2");
-    $consulta->bind_param("s", $usuarioSesion);
-    $consulta->execute();
-    $resultado = $consulta->get_result();
-    $datos = $resultado->fetch_assoc();
-    $pedidosPendientes = $datos['cantidad'];
-    ?>
-
-<div style="display: flex; align-items: center; justify-content: flex-end; margin-right: 10%; cursor:pointer;">
-    <!-- Círculo rojo con número -->
-    <div id="n_productos">
-        <?php echo $pedidosPendientes; ?>
-    </div>
-    
-    <!-- Icono del carrito -->
-    <!-- Ícono del carrito como enlace -->
-<a href="asi_sistema/info/carrito/carrito.php" style="margin-right: 10%; float:right; font-size: 28px; text-decoration: none;">🛒</a>
-
-</div>
-
-
+    <div id="menuLateral" style="display:none; position: fixed; top: 0; left: 0; width: 250px; height: 100%; background: #333; color: white; padding: 20px; z-index: 10000;">
+        <button id="cerrarMenu" style="font-size: 20px; background:none; border:none; color: white; cursor:pointer;">&times; Cerrar</button>
+        <ul style="list-style:none; padding: 10px 0;">
+            <li><a href="#" style="color:white; text-decoration:none;">Inicio</a></li>
+            <li><a href="#" style="color:white; text-decoration:none;">Categorías</a></li>
+            
    
+            <ul id="listaCategorias" style="padding-left: 15px; display: flex; flex-direction: column; gap: 10px;"></ul>
 
-</div>
-<br>
-<?php else: ?>
-    <!-- Mostrar formulario si NO hay usuario en sesión -->
-    <div style="text-align:center; margin-bottom: 20px; font-size: 18px;">
-        <label for="pedidoId" style="font-weight:bold; font-size:16px;">ID del Pedido: </label>
-        <input type="text" id="pedidoId" name="pedidoId" placeholder="Ingrese el ID del pedido" style="padding:5px; font-size:16px; width: 200px;">
-        <button id="guardarUsuario" style="padding: 6px 12px; margin-left: 10px;">Intro</button>
-       
-        <div id="errorPedidoId" style="color:red; margin-top:5px;"></div>
+            <li><a href="#" style="color:white; text-decoration:none;">Pedidos</a></li>
+            <li><a href="#" style="color:white; text-decoration:none;">Contacto</a></li>
+        </ul>
     </div>
-<?php endif; ?>
 
+    <div style="max-height: 400px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;">
+        <table id="tablaMenu">
+            <thead>
+                <tr>
+                    <th>Imagen</th>
+                    <th>Producto</th>
+                    <th>Precio</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Aquí se cargarán dinámicamente las filas -->
+            </tbody>
+        </table>
+    </div>
 
-<?php// $_SESSION['usuario']='volantuso';?>
-
-
-<!--Muestra las categorias para exponer en la tabla-->
-
-<div id="menuLateral" style="display:none; position: fixed; top: 0; left: 0; width: 250px; height: 100%; background: #333; color: white; padding: 20px; z-index: 10000;">
-  <button id="cerrarMenu" style="font-size: 20px; background:none; border:none; color: white; cursor:pointer;">&times; Cerrar</button>
-  <ul style="list-style:none; padding: 10px 0;">
-    <li><a href="#" style="color:white; text-decoration:none;">Inicio</a></li>
-    <li><a href="#" style="color:white; text-decoration:none;">Categorías</a></li>
-    <?php
-  
-    $sql = "SELECT DISTINCT categoria FROM menu";
-    $result = mysqli_query($conexion, $sql);
-
-    echo '<div style="display: flex; flex-direction: column; gap: 10px; padding-left: 15px;">';
-
-    while ($row = mysqli_fetch_assoc($result)) {
-        $categoria = htmlspecialchars($row['categoria']); // Seguridad contra XSS
-        echo '<button style="
-            background: #555;
-            color: white;
-            border: none;
-            padding: 10px;
-            text-align: left;
-            cursor: pointer;
-            border-radius: 5px;
-            font-size: 16px;
-            margin: 2px 0;
-        " onclick="mostrarProductosPorCategoria(\'' . $categoria . '\')">' . $categoria . '</button>';
-    }
-    
-    echo '</div>';
-    ?>
-     <ul id="listaCategorias" style="padding-left: 15px;"></ul> <!-- CATEGORÍAS DINÁMICAS AQUÍ -->
-
-    <li><a href="#" style="color:white; text-decoration:none;">Pedidos</a></li>
-    <li><a href="#" style="color:white; text-decoration:none;">Contacto</a></li>
-  </ul>
-</div>
-
-
-
-
-<!-- Tabla de productos -->
-<div style="max-height: 400px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;">
-  <table>
-    <thead>
-      <tr>
-        <th>Imagen</th>
-        <th>Producto</th>
-        <th>Precio</th>
-      </tr>
-    </thead>
-    <tbody>
-<?php
-
-if ($conexion->connect_error) {
-    echo "<tr><td colspan='5'>Error en la conexión: " . htmlspecialchars($conexion->connect_error) . "</td></tr>";
-    exit;
-}
-
-$sql = "SELECT producto, precio, detalles, img FROM menu ORDER BY producto ASC";
-$resultado = $conexion->query($sql);
-
-if ($resultado && $resultado->num_rows > 0) {
-  while ($fila = $resultado->fetch_assoc()) {
-    $producto = htmlspecialchars($fila['producto']);
-    $precio = number_format(floatval($fila['precio']), 2);
-    $detalles = htmlspecialchars($fila['detalles'] ?? '');
-    $imgNombre = $fila['img'] ?? '';
-    $rutaImg = "imagenes/" . $imgNombre;
-
-    if ($imgNombre && file_exists($rutaImg)) {
-        // Añadimos los atributos data-* necesarios
-        $imgTag = "<img src='$rutaImg' alt='$producto' class='menu-img imgProducto' 
-                    data-producto=\"$producto\" 
-                    data-precio=\"$precio\" 
-                    data-detalles=\"$detalles\" 
-                    data-imagen=\"$rutaImg\">";
-    } else {
-        $imgTag = "<span>Sin imagen</span>";
-    }
-
-    echo "<tr id='tr1'>";
-    echo "<td>$imgTag</td>";
-    echo "<td>$producto</td>";
-    echo "<td>$$precio</td>";
-    echo "</tr>";
-
-    echo "<tr>";
-    echo "<td><button class='agregar-btn btnAgregar' data-producto=\"$producto\" data-precio=\"" . floatval($fila['precio']) . "\">Agregar</button></td>";
-    echo "</tr>";
-}
-
-
-$conexion->close();
-}
-?>
-    </tbody>
-  </table>
-</div>
-
-<script>
-function agregarProducto(producto, precio) {
-  alert("Producto agregado: " + producto + "\nPrecio: $" + precio);
-  // Aquí podrías hacer un fetch() o enviar el producto a tu carrito/pedido
-}
-</script>
-
-<!-- Modal para imagen ampliada y detalles -->
-<div id="modalImagen">
-  <button class="cerrarBtn" onclick="cerrarModal()">X</button>
-  <img src="" alt="Imagen ampliada" id="imgAmpliada">
-  <div id="detallesProducto" style="font-size: 18px; font-weight: bold;"></div>
-</div>
-
-
-
+    <div id="modalImagen">
+        <button class="cerrarBtn" onclick="cerrarModal()">X</button>
+        <img src="" alt="Imagen ampliada" id="imgAmpliada">
+        <div id="detallesProducto" style="font-size: 18px; font-weight: bold;"></div>
+    </div>
 </body>
+
+
 </html>
+
