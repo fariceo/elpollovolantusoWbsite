@@ -23,6 +23,9 @@ if ($row = mysqli_fetch_assoc($result)) {
         const categoriaInicial = "<?php echo $categoriaAleatoria; ?>";
     </script>
     <script src="js/index.js" defer></script>
+<!--icono-->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
 </head>
 <body>
     <h2 id="textoEncabezado">
@@ -69,26 +72,43 @@ if ($row = mysqli_fetch_assoc($result)) {
     <div id="menuLateral" style="display:none; position: fixed; top: 0; left: 0; width: 250px; height: 100%; background: #333; color: white; padding: 20px; z-index: 10000;">
         <button id="cerrarMenu" style="font-size: 20px; background:none; border:none; color: white; cursor:pointer;">&times; Cerrar</button>
         <ul style="list-style:none; padding: 10px 0;">
-            <li><a href="#" style="color:white; text-decoration:none;">Inicio</a></li>
-            <li><a href="#" style="color:white; text-decoration:none;">Categorías</a></li>
+        
+           
+            <li><a href="asi_sistema/info/usuarios/miPerfil.php" style="color:white; text-decoration:none;"><i class="bi bi-person-circle" style="margin-right: 5px;"></i> Mi perfil</a></li>
+
+            <li>
+  
+            <a href="#" style="color:white; text-decoration:none;"><i class="bi bi-list-ul" style="margin-right: 5px;">
+
+            </i> Menu Restaurante</a>
+            </li>
             
    
             <ul id="listaCategorias" style="padding-left: 15px; display: flex; flex-direction: column; gap: 10px;"></ul>
 
-            <li><a href="#" style="color:white; text-decoration:none;">Pedidos</a></li>
-            <li><a href="#" style="color:white; text-decoration:none;">Contacto</a></li>
+            <li style="padding-top: 20px;">
+                <a href="#" style="color:white; text-decoration:none;">
+                <i class="bi bi-cart me-2"></i> Pedidos
+                </a>
+            </li>   
+
+           <li>
+                <a href="contacto.php" style="color:white; text-decoration:none;">
+                <i class="bi bi-telephone"></i> Contacto
+                </a>
+            </li>
+
+            <li>
+                <a href="sobreNosotros.php" style="color:white; text-decoration:none;">
+                <i class="bi bi-info-circle"></i> Sobre Nosotros
+                </a>
+         </li> 
         </ul>
     </div>
 
     <div style="max-height: 400px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;">
         <table id="tablaMenu">
-            <thead>
-                <tr>
-                    <th>Imagen</th>
-                    <th>Producto</th>
-                    <th>Precio</th>
-                </tr>
-            </thead>
+          
             <tbody>
                 <!-- Aquí se cargarán dinámicamente las filas -->
             </tbody>
@@ -96,6 +116,15 @@ if ($row = mysqli_fetch_assoc($result)) {
     </div>
 
     <div id="modalImagen">
+    <h2 id="textoEncabezado">
+        <a href="admin.php"><img id='imgLogo' src="imagenes/logo.jpeg" style="  width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid white; "></a>
+       <!-- Aquí irá el nombre del producto -->
+    <a id="modalTitulo" class="h5 mb-0 text-white"></a>
+    </h2>
         <button class="cerrarBtn" onclick="cerrarModal()">X</button>
         <img src="" alt="Imagen ampliada" id="imgAmpliada">
         <div id="detallesProducto" style="font-size: 18px; font-weight: bold;"></div>
@@ -104,4 +133,3 @@ if ($row = mysqli_fetch_assoc($result)) {
 
 
 </html>
-
