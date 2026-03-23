@@ -10,6 +10,53 @@ include '../../../conexion.php';
 
 $usuario = $_SESSION['usuario'];
 
+// ===============================
+// 1️⃣ Procesar confirmación de pedido y enviar notificación
+// ===============================
+if (isset($_POST['confirmar'])) {
+
+    // Actualizar pedidos a confirmados
+    $sql = "UPDATE pedidos SET estado = 1 WHERE usuario = ? AND estado = 0";
+    $stmt = $conexion->prepare($sql);
+    $stmt->bind_param("s", $usuario);
+    $stmt->execute();
+    $stmt->close();
+
+    // Obtener detalle de los productos confirmados
+    $sql2 = "SELECT producto, cantidad FROM pedidos WHERE usuario = ? AND estado = 1";
+    $stmt2 = $conexion->prepare($sql2);
+    $stmt2->bind_param("s", $usuario);
+    $stmt2->execute();
+    $result2 = $stmt2->get_result();
+
+    $productosPedido = [];
+    while ($row = $result2->fetch_assoc()) {
+        $productosPedido[] = $row['producto'] . " x" . $row['cantidad'];
+    }
+    $stmt2->close();
+
+$detallePedido = "\n- " . implode("\n- ", $productosPedido);
+
+    // Enviar notificación push
+    require_once "notificacion_de_compra.php"; // ajusta ruta
+
+    $sqlTokens = "SELECT token_fcm FROM tokens_fcm WHERE rol='cocinero'";
+    $resultTokens = $conexion->query($sqlTokens);
+    while ($row = $resultTokens->fetch_assoc()) {
+        enviarNotificacionFCM(
+            $row['token_fcm'],
+            "Nuevo pedido confirmado",
+            "Pedido de $usuario: $detallePedido"
+        );
+    }
+
+    // Mensaje de confirmación para mostrar en la página
+    $mensajeConfirmacion = "✅ Pedido confirmado correctamente.";
+}
+
+// ===============================
+// 2️⃣ Cargar pedidos como antes
+// ===============================
 $sql = "SELECT id, producto, cantidad, precio, total, estado 
         FROM pedidos 
         WHERE usuario = ? AND estado != 2";
@@ -65,6 +112,10 @@ body {
 <div class="carrito">
     <h2>🛒 Mi Carrito</h2>
 
+    <?php if(isset($mensajeConfirmacion)): ?>
+        <p style="color:green;font-weight:bold;text-align:center;"><?php echo $mensajeConfirmacion; ?></p>
+    <?php endif; ?>
+
 <?php
 if ($result->num_rows > 0) {
     while ($row = $result->fetch_assoc()) {
@@ -114,7 +165,7 @@ $conexion->close();
 
 <?php if ($totalFinal > 0 && $hayPedidosPendientes): ?>
     <div style="text-align:center;margin-top:30px;">
-        <form action="confirmar_pedido.php" method="post">
+        <form method="post">
             <button type="submit" name="confirmar" 
             style="padding:10px 20px;font-size:16px;">✅ Confirmar Compra</button>
         </form>
