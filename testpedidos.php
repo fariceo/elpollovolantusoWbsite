@@ -4,210 +4,148 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Ingresar Pedidos</title>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
     <script>
 
-        //buscar producbbbto
+        //buscar producto
         function perderFocoproducto() {
-            $("#ventana_buscador").html("");
+            $("#ventana_buscador").html("").fadeOut();
         }
-function buscar_producto() {
-    var valor = $("#producto").val().trim();
 
-    if(valor !== "") {
-        $.ajax({
-            type: "POST",
-            url: "asi_sistema/info/procesar2.php",
-            data: { buscar_producto: valor },
-            success: function(result) {
-                if(result.trim() !== "") {
-                    $("#ventana_buscador").html(result).fadeIn();
-                } else {
-                    $("#ventana_buscador").fadeOut().html("");
-                }
+        function buscar_producto() {
+            var valor = $("#producto").val().trim();
+
+            if (valor !== "") {
+                $.ajax({
+                    type: "POST",
+                    url: "asi_sistema/info/procesar2.php",
+                    data: { buscar_producto: valor },
+                    success: function (result) {
+                        if (result.trim() !== "") {
+                            $("#ventana_buscador").html(result).fadeIn();
+                        } else {
+                            $("#ventana_buscador").fadeOut().html("");
+                        }
+                    }
+                });
+            } else {
+                $("#ventana_buscador").fadeOut().html("");
             }
-        });
-    } else {
-        $("#ventana_buscador").fadeOut().html("");
-    }
-}
-
+        }
 
         function add_list(e, f) {
-            // alert(e + f);
             var cantidad = prompt("Cantidad");
         }
-        /*
-        
-                function outFocus() {
-                    $("#ventana_usuario").html("");
-                }*/
 
         function alPerderFoco() {
-            //$("#ventana_usuario").html("");
+            // $("#ventana_usuario").html("");
         }
-        function buscar_usuario() {
 
-            //alert($("#producto").val());
+        function buscar_usuario() {
             var usuario = $("#usuario").val();
 
-            // var texto = $('#texto').text();
             var textoConMayuscula = usuario.charAt(0).toUpperCase() + usuario.slice(1);
             $('#usuario').val(textoConMayuscula);
 
-
-
             $.ajax({
-
                 type: "POST",
                 url: "asi_sistema/info/procesar2.php",
                 data: { buscar_deudor: usuario, buscar_usuario: 1 },
                 success: function (result) {
                     $("#ventana_usuario").html(result);
-
                 }
             });
 
-
-            // Asignar el evento onblur dentro del evento onkeyup
-            document.getElementById("#usuario").onblur = function () {
-                alPerderFoco();
+            var inputUsuario = document.getElementById("usuario");
+            if (inputUsuario) {
+                inputUsuario.onblur = function () {
+                    alPerderFoco();
+                }
             }
         }
 
-
-
-
-
-
-
-
-
-
         function elegir_usuario(e) {
-
             $("#usuario").val(e);
 
             $.ajax({
-
                 type: "POST",
                 url: "asi_sistema/info/procesar2.php",
-                // data: { buscar_deudor: $("#usuario").val(), buscar_usuario: "", pedidos: 1, buscar_usuario_pedido: 2 },
                 data: { buscar_deudor: $("#usuario").val(), buscar_usuario: "" },
                 success: function (result) {
                     $("#ventana_usuario").html(result);
                     $("#ventana_usuario").html("");
-
                 }
             });
         }
-        /*
-        function mostrar_lista_pedidos() {
-    
-        $.ajax({
-        type: "POST",
-        url: "asi_sistema/info/procesar.php",
-        data: { mostrar_lista_pedidos: 1 },
-        success: function (result) {
-        $("body").html(result);
-        }
-    
-        });
-        }*/
 
-      function ingresar(producto, precio) {
-    // Verificar que el usuario esté ingresado
-    if ($("#usuario").val() != "") {
+        function ingresar(producto, precio) {
+            if ($("#usuario").val() != "") {
+                var cantidad = $("#cantidad_" + producto.replace(/\s/g, '')).val();
 
-        // Obtener la cantidad del input correspondiente al producto
-        var cantidad = $("#cantidad_" + producto.replace(/\s/g, '')).val();
+                if (cantidad <= 0) {
+                    alert("Ingrese una cantidad válida");
+                    return;
+                }
 
-        if (cantidad <= 0) {
-            alert("Ingrese una cantidad válida");
-            return;
-        }
+                var total = cantidad * precio;
 
-        var total = cantidad * precio;
+                $.ajax({
+                    type: "POST",
+                    url: "testpedidos.php",
+                    data: {
+                        usuario: $("#usuario").val(),
+                        producto: producto,
+                        cantidad: cantidad,
+                        precio: precio,
+                        total: total,
+                        i: 1
+                    },
+                    success: function (result) {
+                        $("body").html(result);
+                    }
+                });
 
-        // Insertar pedido
-        $.ajax({
-            type: "POST",
-            url: "testpedidos.php",
-            data: { 
-                usuario: $("#usuario").val(), 
-                producto: producto, 
-                cantidad: cantidad, 
-                precio: precio, 
-                total: total, 
-                i: 1 
-            },
-            success: function(result) {
-                $("body").html(result); // Actualiza la lista de pedidos
+                $.ajax({
+                    type: "POST",
+                    url: "asi_sistema/info/procesar2.php",
+                    data: { producto: producto, cantidad: cantidad, restar_stock: 1 },
+                    success: function (result) {
+                    }
+                });
+
+            } else {
+                alert("Introducir Usuario");
+                $("#usuario").focus();
             }
-        });
-
-        // Restar stock
-        $.ajax({
-            type: "POST",
-            url: "asi_sistema/info/procesar2.php",
-            data: { producto: producto, cantidad: cantidad, restar_stock: 1 },
-            success: function(result) {
-                // Aquí puedes agregar feedback si quieres
-            }
-        });
-
-    } else {
-        alert("Introducir Usuario");
-        $("#usuario").focus();
-    }
-}
-
-
+        }
 
         function metodo_pago(e, f, g, h) {
 
-
-
-            //fiado
             if (e == 2) {
-
-                alert(" metodo pago " + e + " id : " + f + " usuario : " + g + " fecha : " + h)
+                alert(" metodo pago " + e + " id : " + f + " usuario : " + g + " fecha : " + h);
                 var saldo_pendiente = prompt("Saldo pendiente");
 
-                //if(saldo_pendiente!=NULL && saldo_pendiente!="" && !isNam(saldo_pendiente)){
                 $.ajax({
-
                     type: "POST",
                     url: "asi_sistema/info/procesar.php",
                     data: { metodo_pago: e, id_metodo_pago: f, saldo_pendiente_pago: saldo_pendiente, credito_usuario: g, fecha: h },
                     success: function (result) {
-                        // $("body").html(result);
                     }
                 });
-
-
-
             }
-            //efectivo
-            if (e == 1) {
-                // alert(" metodo pago " + e + " id : " + f + " usuario : " + g + " fecha : " + h)
-                $.ajax({
 
+            if (e == 1) {
+                $.ajax({
                     type: "POST",
                     url: "asi_sistema/info/procesar.php",
                     data: { metodo_pago: e, credito_usuario: g, id_metodo_pago: f },
                     success: function (result) {
-
                     }
                 });
-
             }
 
-
-
             $.ajax({
-
                 type: "POST",
                 url: "testpedidos.php",
                 data: { metodo_pago: e, id_metodo_pago: f },
@@ -215,87 +153,56 @@ function buscar_producto() {
                     $("body").html(result);
                 }
             });
-
-
         }
 
         function listo(e, f) {
-
-            //alert(e + f);
             $.ajax({
-
                 type: "POST",
                 url: "asi_sistema/info/procesar.php",
                 data: { i: 1, mostrar_lista_pedidos: 1, usuario_pedido: e, productos_pedido: f, cobrar: 1, usuario: 1, negocio: f },
                 success: function (result) {
-                    //$("body").html(result);
-                    // $("#lista_pedidos").html(result);
-                    // $("body").html(result);
                 }
             });
-            $.ajax({
 
+            $.ajax({
                 type: "POST",
                 url: "testpedidos.php",
                 data: { i: 1 },
                 success: function (result) {
                     $("body").html(result);
-                    // $("#lista_pedidos").html(result);
-                    // $("body").html(result);
                 }
             });
 
-
             $.ajax({
-
                 type: "POST",
                 url: "asi_sistema/info/procesar2.php",
                 data: { pedido_listo: 1, usuario_pedido: e },
                 success: function (result) {
-                    //$("#lista_pedidos").html(result);
-                    //$("#lista_pedidos").html(result);
                 }
             });
-            //mostrar_lista_pedidos();
-
         }
 
-
         function cambiar_fecha(e) {
-
-            // Crear un objeto Date que representa la fecha y hora actuales
             const hoy = new Date();
-            // Obtener el año, mes y día
-            const año = hoy.getFullYear(); // Obtiene el año completo (ej: 2024)
-            const mes = String(hoy.getMonth() + 1).padStart(2, '0'); // Obtiene el mes (0-11) y se suma 1. padStart asegura 2 dígitos
-            const día = String(hoy.getDate()).padStart(2, '0'); // Obtiene el día del mes (1-31) y asegura 2 dígitos
-
-            // Formatear la fecha en 'YYYY-MM-DD'
+            const año = hoy.getFullYear();
+            const mes = String(hoy.getMonth() + 1).padStart(2, '0');
+            const día = String(hoy.getDate()).padStart(2, '0');
             const fechaFormateada = `${año}-${mes}-${día}`;
-
-            //console.log(fechaFormateada); // Ejemplo de salida: 2024-10-04
 
             var fecha = prompt("cambiar fecha " + e, fechaFormateada);
 
             $.ajax({
-
                 type: "POST",
                 url: "testpedidos.php",
                 data: { fecha: fecha, id_fecha: e },
                 success: function (result) {
-
                     $("body").html(result);
                 }
             })
         }
 
-
-
-        //vaciar la tabla pedidos
         function truncate() {
-
             $.ajax({
-
                 type: "POST",
                 url: "testpedidos.php",
                 data: { tabla_pedidos: 1 },
@@ -303,196 +210,425 @@ function buscar_producto() {
                     $("body").html(result);
                 }
             });
-
         }
 
-
-
     </script>
-</head>
 
-<style>
-    div {
-        display: inline-table;
-    }
-</style>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        body {
+            background: #f4f7fb;
+            color: #1f2937;
+            padding: 20px;
+        }
+
+        a {
+            text-decoration: none;
+        }
+
+        .main-panel {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .topbar-left img {
+            border-radius: 10px;
+            object-fit: cover;
+        }
+
+        .topbar-text h2 {
+            font-size: 22px;
+            color: #111827;
+            margin-bottom: 4px;
+        }
+
+        .topbar-text p {
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        .topbar-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .topbar-actions img {
+            width: 42px;
+            height: 42px;
+            padding: 8px;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .topbar-actions img:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+        }
+
+        .page-title {
+            text-align: center;
+            font-size: 28px;
+            font-weight: bold;
+            color: #111827;
+            margin-bottom: 25px;
+        }
+
+        .search-module {
+            background: #ffffff;
+            border-radius: 18px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+
+        .search-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            align-items: start;
+        }
+
+        .field-card {
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            border-radius: 14px;
+            padding: 18px;
+        }
+
+        .field-card label {
+            display: block;
+            font-size: 14px;
+            font-weight: bold;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+
+        .field-card input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid #d1d5db;
+            border-radius: 10px;
+            outline: none;
+            font-size: 15px;
+            background: #fff;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .field-card input:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+        }
+
+        .search-results-box {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 14px;
+            min-height: 180px;
+            padding: 15px;
+            box-shadow: inset 0 0 0 1px #f3f4f6;
+        }
+
+        .results-title {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 14px;
+            font-weight: bold;
+            color: #374151;
+        }
+
+        #ventana_buscador,
+        #ventana_usuario {
+            width: 100%;
+        }
+
+        #ventana_buscador {
+            display: none;
+        }
+
+        .orders-section {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .order-card {
+            background: #ffffff;
+            border-radius: 18px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.07);
+            padding: 20px;
+            margin-bottom: 22px;
+            overflow-x: auto;
+        }
+
+        .order-user-title {
+            text-align: center;
+            font-size: 22px;
+            color: #2563eb;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .order-table {
+            width: 100%;
+            border-collapse: collapse;
+            overflow: hidden;
+            border-radius: 12px;
+        }
+
+        .order-table thead {
+            background: #eff6ff;
+        }
+
+        .order-table th {
+            padding: 14px 10px;
+            font-size: 14px;
+            color: #1e3a8a;
+            border-bottom: 1px solid #dbeafe;
+            text-align: center;
+        }
+
+        .order-table td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #eef2f7;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .order-table tbody tr:hover {
+            background: #f9fbff;
+        }
+
+        .order-total-row td {
+            background: #f8fafc;
+            font-weight: bold;
+            border-top: 2px solid #dbeafe;
+        }
+
+        .order-total-amount {
+            color: #2563eb;
+            font-weight: bold;
+        }
+
+        .actions-panel {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .btn-danger {
+            background: #dc2626;
+            color: white;
+            border: none;
+            padding: 12px 22px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: bold;
+            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
+            transition: transform 0.2s ease, opacity 0.2s ease;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-1px);
+            opacity: 0.92;
+        }
+
+        hr {
+            border: none;
+            height: 1px;
+            background: #e5e7eb;
+            margin: 18px 0;
+        }
+
+        @media (max-width: 768px) {
+            .search-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .page-title {
+                font-size: 22px;
+            }
+
+            .topbar {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .topbar-actions {
+                width: 100%;
+                justify-content: flex-start;
+            }
+        }
+    </style>
+</head>
 
 <body onload="mostrar_lista_pedidos()">
 
-    <a href="admin">
-        <img src="imagenes/logo.jpeg" style="height: 50px;width: 50px">
-    </a>
-    <br>
+    <div class="main-panel">
+        <div class="topbar">
+            <div class="topbar-left">
+                <a href="admin">
+                    <img src="imagenes/logo.jpeg" style="height:55px; width:55px;">
+                </a>
+                <div class="topbar-text">
+                    <h2>Panel de Pedidos</h2>
+                    <p>Módulo para agregar y visualizar pedidos</p>
+                </div>
+            </div>
 
-    <br>
-    <a href="asi_sistema/info/pagos"><img src="imagenes/pago.png" style="width: 40px;height: 40px"></a>
+            <div class="topbar-actions">
+                <a href="asi_sistema/info/pagos">
+                    <img src="imagenes/pago.png" alt="Pagos">
+                </a>
 
-    <a href="asi_sistema/info/info_ventas.php"><img src="https://elpollovolantuso.com/imagenes/historial.png" style="width: 40px;height: 40px"></a>
-
-
-    <h3 style="text-align:center">Ingresar Pedidos</h3>
-    <br>
-
-    <?php
-    include("conexion.php");
-
-    ?>
-    <!--fecha-->
-    <?php
-    ini_set('date.timezone', 'America/Guayaquil');
-
-
-    //echo date("F l h:i");
-    
-
-    setlocale(LC_ALL, "es_ES");
-    strftime("%A %d de %B del %Y");
-
-    //$fecha=strftime("%A %d de %B del %Y");
-    $fecha = date("Y-m-d");
-    //$fecha='2020-01-13';					
-    $hora = date("G:i");
-
-
-
-    ?>
-
-    <?php
-    /*acciones de funciones*/
-
-
-    ///cambiar fecha
-    if ($_POST['id_fecha'] != "") {
-
-        $fecha_actual = mysqli_query($conexion, "UPDATE pedidos SET fecha='$_POST[fecha]' WHERE usuario='$_POST[id_fecha]'");
-    }
-
-
-    //insertar producto en carrito
-    if ($_POST['producto'] != "") {
-
-        $usuario = ucfirst($_POST['usuario']);
-        $insertar_pedido = mysqli_query($conexion, "INSERT INTO pedidos (`usuario`,`producto`,`cantidad`,`precio`,`total`,`estado`,`delivery`,`metodo_pago`,`fecha`,`hora`) VALUES ('$usuario','$_POST[producto]','$_POST[cantidad]','$_POST[precio]','$_POST[total]','0','default','default','$fecha','$hora'
-        )");
-    }
-
-    //Vaciar tabla pedidos
-    
-    if ($_POST['tabla_pedidos'] != "") {
-
-        $truncatetable = mysqli_query($conexion, "TRUNCATE TABLE pedidos");
-    }
-    ?>
-
-    <br>
-<div style="display:flex; justify-content:center; align-items:flex-start; gap:30px; margin-top:30px;">
-    
-    <!-- Contenedor de Usuario -->
-    <div style="background:#f0f4f8; padding:20px; border-radius:12px; box-shadow:0 4px 10px rgba(0,0,0,0.1); width:250px; text-align:center;">
-        <p style="font-weight:bold; color:#333;">Usuario</p>
-        <?php if ($_POST['usuario'] == "") { ?>
-            <input type="text" id="usuario" onKeyup="buscar_usuario()" 
-                   style="width:90%; padding:8px; border:1px solid #ccc; border-radius:6px; text-align:center; margin-bottom:15px;">
-        <?php } else { ?>
-            <input type="text" id="usuario" onKeyup="buscar_usuario()" 
-                   value="<?php echo $_POST['usuario'] ?>" onblur="perderFocoproducto()" 
-                   style="width:90%; padding:8px; border:1px solid #ccc; border-radius:6px; text-align:center; margin-bottom:15px;">
-        <?php } ?>
-
-        <p style="font-weight:bold; color:#333;">Producto</p>
-        <input type="text" id="producto" onKeyup="buscar_producto()" 
-               style="width:90%; padding:8px; border:1px solid #ccc; border-radius:6px; text-align:center;">
-    </div>
-
-    <!-- Ventanas de búsqueda -->
-  
-
-        <div id="ventana_buscador" 
-             style="display:none">
+                <a href="asi_sistema/info/info_ventas.php">
+                    <img src="https://elpollovolantuso.com/imagenes/historial.png" alt="Historial">
+                </a>
+            </div>
         </div>
-    </div>
 
-</div>
+        <h3 class="page-title">Ingresar Pedidos</h3>
 
+        <?php
+        include("conexion.php");
+        ?>
 
+        <?php
+        ini_set('date.timezone', 'America/Guayaquil');
 
+        setlocale(LC_ALL, "es_ES");
+        strftime("%A %d de %B del %Y");
 
+        $fecha = date("Y-m-d");
+        $hora = date("G:i");
+        ?>
 
+        <?php
+        if ($_POST['id_fecha'] != "") {
+            $fecha_actual = mysqli_query($conexion, "UPDATE pedidos SET fecha='$_POST[fecha]' WHERE usuario='$_POST[id_fecha]'");
+        }
 
+        if ($_POST['producto'] != "") {
+            $usuario = ucfirst($_POST['usuario']);
+            $insertar_pedido = mysqli_query($conexion, "INSERT INTO pedidos (`usuario`,`producto`,`cantidad`,`precio`,`total`,`estado`,`delivery`,`metodo_pago`,`fecha`,`hora`) VALUES ('$usuario','$_POST[producto]','$_POST[cantidad]','$_POST[precio]','$_POST[total]','0','default','default','$fecha','$hora')");
+        }
 
+        if ($_POST['tabla_pedidos'] != "") {
+            $truncatetable = mysqli_query($conexion, "TRUNCATE TABLE pedidos");
+        }
+        ?>
 
-    <div style="text-align:center" id="lista_pedidos"></div>
+        <div class="search-module">
+            <div class="search-grid">
+                <div class="field-card">
+                    <label for="usuario">Usuario</label>
+                    <?php if ($_POST['usuario'] == "") { ?>
+                        <input type="text" id="usuario" onKeyup="buscar_usuario()" placeholder="Escribe el nombre del usuario">
+                    <?php } else { ?>
+                        <input type="text" id="usuario" onKeyup="buscar_usuario()" value="<?php echo $_POST['usuario'] ?>" onblur="perderFocoproducto()" placeholder="Escribe el nombre del usuario">
+                    <?php } ?>
 
-<?php
-$musuario = mysqli_query($conexion, "SELECT DISTINCT usuario FROM pedidos WHERE estado!='2'");
-while ($usuario = mysqli_fetch_array($musuario)) {
+                    <br><br>
 
-    echo "<hr style='border:1px solid #ccc; margin:20px 0;'>";
-    echo "<h3 style='color:#1a73e8; text-align:center; margin-bottom:10px;'>" . $usuario['usuario'] . "</h3>";
+                    <label for="producto">Producto</label>
+                    <input type="text" id="producto" onKeyup="buscar_producto()" placeholder="Busca un producto">
+                </div>
 
-    // Agrupar productos repetidos y sumar cantidades y totales
-    $buscar_compra = mysqli_query($conexion, "
-        SELECT producto, precio, SUM(cantidad) as cantidad_total, SUM(total) as total_producto
-        FROM pedidos 
-        WHERE estado!=2 AND usuario='".$usuario['usuario']."'
-        GROUP BY producto, precio
-    ");
+                <div class="search-results-box">
+                    <span class="results-title">Resultados de búsqueda</span>
+                    <div id="ventana_usuario"></div>
+                    <div id="ventana_buscador"></div>
+                </div>
+            </div>
+        </div>
 
-    $total_usuario = 0;
-    $productos = [];
-    while ($compra = mysqli_fetch_array($buscar_compra)) {
-        $productos[] = $compra;
-        $total_usuario += $compra['total_producto'];
-    }
-    ?>
+        <div style="text-align:center" id="lista_pedidos"></div>
 
-    <table style="margin:auto; border-collapse: collapse; width: 60%; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-        <thead style="background-color: #f2f2f2; color: #333; text-align: center;">
-            <tr>
-                <th style="padding: 10px; border-bottom: 1px solid #ddd;">Producto</th>
-                <th style="padding: 10px; border-bottom: 1px solid #ddd;">Cantidad</th>
-                <th style="padding: 10px; border-bottom: 1px solid #ddd;">Precio</th>
-                <th style="padding: 10px; border-bottom: 1px solid #ddd;">Total</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php foreach ($productos as $compra): ?>
-            <tr style="text-align:center; border-bottom:1px solid #eee;">
-                <td style="padding: 8px;"><?php echo $compra['producto'] ?></td>
-                <td style="padding: 8px;"><?php echo $compra['cantidad_total'] ?></td>
-                <td style="padding: 8px;"><?php echo "$ " . number_format($compra['precio'], 2) ?></td>
-                <td style="padding: 8px;"><?php echo "$ " . number_format($compra['total_producto'], 2) ?></td>
-            </tr>
-            <?php endforeach; ?>
-        </tbody>
-        <tfoot>
-            <tr style="background-color:#f9f9f9; font-weight:bold;">
-                <td colspan="3" style="text-align:right; padding:10px; border-top:2px solid #ddd;">Total de la compra:</td>
-                <td style="padding:10px; border-top:2px solid #ddd; color:#1a73e8;">
-                    <?php echo "$ " . number_format($total_usuario, 2); ?>
-                </td>
-            </tr>
-        </tfoot>
-    </table>
+        <div class="orders-section">
+            <?php
+            $musuario = mysqli_query($conexion, "SELECT DISTINCT usuario FROM pedidos WHERE estado!='2'");
+            while ($usuario = mysqli_fetch_array($musuario)) {
 
-<?php
-}
-?>
+                echo "<div class='order-card'>";
+                echo "<h3 class='order-user-title'>" . $usuario['usuario'] . "</h3>";
 
-    <hr>
+                $buscar_compra = mysqli_query($conexion, "
+                    SELECT producto, precio, SUM(cantidad) as cantidad_total, SUM(total) as total_producto
+                    FROM pedidos 
+                    WHERE estado!=2 AND usuario='" . $usuario['usuario'] . "'
+                    GROUP BY producto, precio
+                ");
 
-    <br><br>
-    <div style="text-align: center">
-        <button onClick="truncate()">Borrar tablas</button>
-        <br>
+                $total_usuario = 0;
+                $productos = [];
+                while ($compra = mysqli_fetch_array($buscar_compra)) {
+                    $productos[] = $compra;
+                    $total_usuario += $compra['total_producto'];
+                }
+                ?>
 
+                <table class="order-table">
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Cantidad</th>
+                            <th>Precio</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($productos as $compra): ?>
+                            <tr>
+                                <td><?php echo $compra['producto'] ?></td>
+                                <td><?php echo $compra['cantidad_total'] ?></td>
+                                <td><?php echo "$ " . number_format($compra['precio'], 2) ?></td>
+                                <td><?php echo "$ " . number_format($compra['total_producto'], 2) ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                    <tfoot>
+                        <tr class="order-total-row">
+                            <td colspan="3" style="text-align:right;">Total de la compra:</td>
+                            <td class="order-total-amount">
+                                <?php echo "$ " . number_format($total_usuario, 2); ?>
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+
+                <?php
+                echo "</div>";
+            }
+            ?>
+        </div>
+
+        <div class="actions-panel">
+            <button class="btn-danger" onClick="truncate()">Borrar tablas</button>
+        </div>
     </div>
 
 </body>
 
 </html>
-
-
-
-
-<!--probando codigo--->
