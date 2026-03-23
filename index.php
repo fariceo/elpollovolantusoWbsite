@@ -1,7 +1,7 @@
 <?php
 session_start();
 include("conexion.php");
-
+//nuevo
 // Obtener categoría aleatoria
 $categoriaAleatoria = "";
 $result = mysqli_query($conexion, "SELECT DISTINCT categoria FROM menu ORDER BY RAND() LIMIT 1");
