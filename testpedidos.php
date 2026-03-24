@@ -787,8 +787,8 @@
             INSERT INTO pedidos (usuario, producto, cantidad, precio, total, estado, delivery, metodo_pago, fecha, hora)
             VALUES ('$usuario_listo','$productos_implode','$cantidad_total','$total_general','$total_general','10','$delivery','$metodo_pago','$fecha','$hora')
         ");
-        // Cambiar estado de los pedidos a 10 (ya registrados)
-        mysqli_query($conexion, "UPDATE pedidos SET estado='10' WHERE usuario='$usuario_listo' AND estado!='2' AND estado!='10'");
+        // Cambiar estado de los pedidos a 100 (ya registrados)
+        mysqli_query($conexion, "UPDATE pedidos SET estado='100' WHERE usuario='$usuario_listo' AND estado!='2' AND estado!='10'");
 
         //ahora borra el pedido igresado en pedidos y mediante un trigger registra la venta en una sola fila en la tabla ventas.
 
