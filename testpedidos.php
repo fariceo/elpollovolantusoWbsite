@@ -123,47 +123,23 @@
             }
         }
 
-        function listo(usuario, total) {
-            if (!confirm("¿Marcar pedido listo y registrar venta de " + usuario + "?")) {
-                return;
-            }
+      function listo(usuario, total) {
+    if (!confirm("¿Marcar pedido listo y registrar venta de " + usuario + "?")) return;
 
-            $.ajax({
-                type: "POST",
-                url: "asi_sistema/info/procesar.php",
-                data: {
-                    i: 1,
-                    mostrar_lista_pedidos: 1,
-                    usuario_pedido: usuario,
-                    productos_pedido: total,
-                    cobrar: 1,
-                    usuario: 1,
-                    negocio: total
-                },
-                success: function (result) {
-                }
-            });
-
-            $.ajax({
-                type: "POST",
-                url: "asi_sistema/info/procesar2.php",
-                data: { pedido_listo: 1, usuario_pedido: usuario },
-                success: function (result) {
-                }
-            });
-
-            $.ajax({
-                type: "POST",
-                url: "testpedidos.php",
-                data: {
-                    pedido_listo_usuario: 1,
-                    usuario_pedido_listo: usuario
-                },
-                success: function (result) {
-                    $("body").html(result);
-                }
-            });
+    $.ajax({
+        type: "POST",
+        url: "testpedidos.php",
+        data: {
+            registrar_venta_y_listo: 1,
+            usuario_pedido_listo: usuario,
+            total_general_venta: total
+        },
+        success: function (result) {
+            //alert(result);
+            location.reload(); // recarga la página para reflejar cambios
         }
+    });
+}
 
         function eliminar_producto(usuario, producto) {
             if (!confirm("¿Cambiar estado a 2 para este producto?\n\nUsuario: " + usuario + "\nProducto: " + producto)) {
@@ -220,27 +196,27 @@
         }
 
         function actualizar_cantidad_input(id, precio, input) {
-        var nuevaCantidad = input.value;
+            var nuevaCantidad = input.value;
 
-        if (nuevaCantidad === "" || isNaN(nuevaCantidad) || parseFloat(nuevaCantidad) <= 0) {
-            alert("Ingrese una cantidad válida");
-            input.focus();
-            return;
-        }
-
-        $.ajax({
-            type: "POST",
-            url: "testpedidos.php",
-            data: {
-                actualizar_cantidad: 1,
-                id_pedido_cantidad: id,
-                nueva_cantidad: nuevaCantidad
-            },
-            success: function (result) {
-                $("body").html(result);
+            if (nuevaCantidad === "" || isNaN(nuevaCantidad) || parseFloat(nuevaCantidad) <= 0) {
+                alert("Ingrese una cantidad válida");
+                input.focus();
+                return;
             }
-        });
-    }
+
+            $.ajax({
+                type: "POST",
+                url: "testpedidos.php",
+                data: {
+                    actualizar_cantidad: 1,
+                    id_pedido_cantidad: id,
+                    nueva_cantidad: nuevaCantidad
+                },
+                success: function (result) {
+                    $("body").html(result);
+                }
+            });
+        }
 
         function cambiar_delivery(usuario, tipo) {
             $.ajax({
@@ -745,7 +721,7 @@
         strftime("%A %d de %B del %Y");
 
         $fecha = date("Y-m-d");
-        $hora = date("G:i");
+        $hora = date("G:i:s");
 
         function limpiar($conexion, $valor) {
             return mysqli_real_escape_string($conexion, trim($valor));
@@ -755,7 +731,7 @@
         if ($_POST['id_fecha'] != "") {
             $usuario_fecha = limpiar($conexion, $_POST['id_fecha']);
             $nueva_fecha = limpiar($conexion, $_POST['fecha']);
-            mysqli_query($conexion, "UPDATE pedidos SET fecha='$nueva_fecha' WHERE usuario='$usuario_fecha' AND estado!='2'");
+            mysqli_query($conexion, "UPDATE pedidos SET fecha='$nueva_fecha' WHERE usuario='$usuario_fecha' AND estado!='2' AND estado!='10'");
         }
 
         // insertar pedido
@@ -769,17 +745,68 @@
             mysqli_query($conexion, "INSERT INTO pedidos (`usuario`,`producto`,`cantidad`,`precio`,`total`,`estado`,`delivery`,`metodo_pago`,`fecha`,`hora`) VALUES ('$usuario','$producto','$cantidad','$precio','$total','0','default','default','$fecha','$hora')");
         }
 
-        // marcar pedido listo
-        if ($_POST['pedido_listo_usuario'] != "" && $_POST['usuario_pedido_listo'] != "") {
-            $usuario_listo = limpiar($conexion, $_POST['usuario_pedido_listo']);
-            mysqli_query($conexion, "UPDATE pedidos SET estado='2' WHERE usuario='$usuario_listo' AND estado!='2'");
-        }
+     if (!empty($_POST['registrar_venta_y_listo']) && !empty($_POST['usuario_pedido_listo'])) {
+    $usuario_listo = ucfirst(limpiar($conexion, $_POST['usuario_pedido_listo']));
+    $total_general_venta = isset($_POST['total_general_venta']) ? floatval($_POST['total_general_venta']) : 0;
 
+    // Obtener los pedidos pendientes del usuario
+    $consulta = mysqli_query($conexion, "
+        SELECT producto, cantidad, precio, total, delivery, metodo_pago
+        FROM pedidos 
+        WHERE usuario='$usuario_listo' AND estado!='2' AND estado!='10'
+    ");
+
+    $productos_array = [];
+    $cantidad_total = 0;
+    $total_general = 0;
+    $delivery = "default";
+    $metodo_pago = "default";
+
+    while ($fila = mysqli_fetch_assoc($consulta)) {
+        $detalle = $fila['producto'] . " x" . $fila['cantidad'] . " - $" . number_format($fila['precio'],2) . " = $" . number_format($fila['total'],2);
+        $productos_array[] = $detalle;
+
+        $cantidad_total += intval($fila['cantidad']);
+        $total_general += floatval($fila['total']);
+
+        // Tomar delivery y metodo_pago del primer pedido
+        $delivery = $fila['delivery'];
+        $metodo_pago = $fila['metodo_pago'];
+    }
+
+    if (count($productos_array) > 0) {
+        // Agrupar todos los productos en un solo string
+        $productos_implode = mysqli_real_escape_string($conexion, implode("\n", $productos_array));
+
+        // Insertar en tabla ventas
+       $result= mysqli_query($conexion, "
+            INSERT INTO pedidos (usuario, producto, cantidad, precio, total, estado, delivery, metodo_pago, fecha, hora)
+            VALUES ('$usuario_listo','$productos_implode','$cantidad_total','$total_general','$total_general','10','$delivery','$metodo_pago','$fecha','$hora')
+        ");
+
+        //ahora borra el pedido igresado en pedidos y mediante un trigger registra la venta en una sola fila en la tabla ventas.
+
+        $registrar_venta=mysqli_query($conexion,"DELETE FROM pedidos WHERE usuario='$usuario_listo' AND estado='10'");
+
+        // Cambiar estado de los pedidos a 10 (ya registrados)
+      //  mysqli_query($conexion, "UPDATE pedidos SET estado='10' WHERE usuario='$usuario_listo' AND estado!='2' AND estado!='10'");
+    }
+
+    echo "✅ Pedido listo / Registrar venta realizado para $usuario_listo";
+
+ 
+
+if (!$result) {
+    echo "Error MySQL: " . mysqli_error($conexion);
+} else {
+    echo "Insert exitoso!";
+}
+}
         // eliminar producto (estado 2)
         if ($_POST['eliminar_producto_estado'] != "" && $_POST['usuario_eliminar'] != "" && $_POST['producto_eliminar'] != "") {
             $usuario_eliminar = limpiar($conexion, $_POST['usuario_eliminar']);
             $producto_eliminar = limpiar($conexion, $_POST['producto_eliminar']);
-            mysqli_query($conexion, "UPDATE pedidos SET estado='2' WHERE usuario='$usuario_eliminar' AND producto='$producto_eliminar' AND estado!='2'");
+            mysqli_query($conexion, "UPDATE pedidos SET estado='2' WHERE usuario='$usuario_eliminar' AND producto='$producto_eliminar' AND estado!='2' AND estado!='10'");
         }
 
         // actualizar cantidad y total por id
@@ -799,33 +826,84 @@
         if ($_POST['actualizar_delivery'] != "" && $_POST['usuario_delivery'] != "" && $_POST['tipo_delivery'] != "") {
             $usuarioDelivery = limpiar($conexion, $_POST['usuario_delivery']);
             $tipoDelivery = limpiar($conexion, $_POST['tipo_delivery']);
-            mysqli_query($conexion, "UPDATE pedidos SET delivery='$tipoDelivery' WHERE usuario='$usuarioDelivery' AND estado!='2'");
+            mysqli_query($conexion, "UPDATE pedidos SET delivery='$tipoDelivery' WHERE usuario='$usuarioDelivery' AND estado!='2' AND estado!='10'");
         }
 
         // actualizar metodo de pago + fiado
-        if ($_POST['actualizar_metodo_pago'] != "" && $_POST['usuario_metodo_pago'] != "" && $_POST['metodo_pago_valor'] != "") {
+        if (
+            isset($_POST['actualizar_metodo_pago']) &&
+            isset($_POST['usuario_metodo_pago']) &&
+            isset($_POST['metodo_pago_valor']) &&
+            $_POST['usuario_metodo_pago'] != "" &&
+            $_POST['metodo_pago_valor'] != ""
+        ) {
             $usuarioMetodo = ucfirst(limpiar($conexion, $_POST['usuario_metodo_pago']));
             $metodoPago = limpiar($conexion, $_POST['metodo_pago_valor']);
 
-            mysqli_query($conexion, "UPDATE pedidos SET metodo_pago='$metodoPago' WHERE usuario='$usuarioMetodo' AND estado!='2'");
+            $metodoPagoActual = "";
+            $consultaMetodoActual = mysqli_query($conexion, "
+                SELECT metodo_pago
+                FROM pedidos
+                WHERE usuario='$usuarioMetodo' AND estado!='2' AND estado!='10'
+                ORDER BY id DESC
+                LIMIT 1
+            ");
 
-            if ($metodoPago == "fiado") {
-                $saldoPendiente = floatval($_POST['saldo_pendiente_pago']);
-                $fechaCredito = limpiar($conexion, $_POST['fecha_credito']);
+            if ($consultaMetodoActual && mysqli_num_rows($consultaMetodoActual) > 0) {
+                $filaMetodoActual = mysqli_fetch_assoc($consultaMetodoActual);
+                $metodoPagoActual = trim($filaMetodoActual['metodo_pago']);
+            }
+
+            mysqli_query($conexion, "
+                UPDATE pedidos
+                SET metodo_pago='$metodoPago'
+                WHERE usuario='$usuarioMetodo' AND estado!='2' AND estado!='10'
+            ");
+
+            if ($metodoPago == "fiado" && $metodoPagoActual != "fiado") {
+                $saldoPendiente = isset($_POST['saldo_pendiente_pago']) ? floatval($_POST['saldo_pendiente_pago']) : 0;
+                $fechaCredito = isset($_POST['fecha_credito']) ? limpiar($conexion, $_POST['fecha_credito']) : "";
+
                 if ($fechaCredito == "") {
                     $fechaCredito = $fecha;
                 }
 
-                $buscarSaldo = mysqli_query($conexion, "SELECT id, saldo_pendiente FROM saldo_pendiente WHERE usuario='$usuarioMetodo' LIMIT 1");
+                if ($saldoPendiente > 0) {
+                    $buscarSaldo = mysqli_query($conexion, "
+                        SELECT id, saldo_pendiente
+                        FROM saldo_pendiente
+                        WHERE usuario='$usuarioMetodo'
+                        ORDER BY id DESC
+                        LIMIT 1
+                    ");
 
-                if ($datoSaldo = mysqli_fetch_assoc($buscarSaldo)) {
-                    $nuevoSaldo = floatval($datoSaldo['saldo_pendiente']) + $saldoPendiente;
-                    mysqli_query($conexion, "UPDATE saldo_pendiente SET saldo_pendiente='$nuevoSaldo', accion='fiado', fecha='$fecha', hora='$hora' WHERE id='" . $datoSaldo['id'] . "'");
-                } else {
-                    mysqli_query($conexion, "INSERT INTO saldo_pendiente (usuario, saldo_pendiente, accion, fecha, hora) VALUES ('$usuarioMetodo', '$saldoPendiente', 'fiado', '$fecha', '$hora')");
+                    if ($buscarSaldo && mysqli_num_rows($buscarSaldo) > 0) {
+                        $datoSaldo = mysqli_fetch_assoc($buscarSaldo);
+                        $saldoActual = floatval($datoSaldo['saldo_pendiente']);
+                        $nuevoSaldo = $saldoActual + $saldoPendiente;
+
+                        mysqli_query($conexion, "
+                            UPDATE saldo_pendiente
+                            SET saldo_pendiente='$nuevoSaldo',
+                                accion='1',
+                                fecha='$fecha',
+                                hora='$hora'
+                            WHERE id='" . $datoSaldo['id'] . "'
+                        ");
+                    } else {
+                        mysqli_query($conexion, "
+                            INSERT INTO saldo_pendiente (usuario, saldo_pendiente, accion, fecha, hora)
+                            VALUES ('$usuarioMetodo', '$saldoPendiente', '1', '$fecha', '$hora')
+                        ");
+                    }
+
+                    $conceptoHistorial = "Pedido fiado desde pedidos";
+
+                    mysqli_query($conexion, "
+                        INSERT INTO historial_credito (usuario, saldo, saldo_contable, concepto, fecha)
+                        VALUES ('$usuarioMetodo', '$saldoPendiente', '$saldoPendiente', '$conceptoHistorial', '$fechaCredito')
+                    ");
                 }
-
-                mysqli_query($conexion, "INSERT INTO historial_credito (usuario, saldo, saldo_contable, concepto, fecha) VALUES ('$usuarioMetodo', '$saldoPendiente', '$saldoPendiente', 'Pedido fiado', '$fechaCredito')");
             }
         }
 
@@ -863,7 +941,7 @@
 
         <div class="orders-section">
             <?php
-            $musuario = mysqli_query($conexion, "SELECT DISTINCT usuario FROM pedidos WHERE estado!='2' ORDER BY id DESC");
+            $musuario = mysqli_query($conexion, "SELECT DISTINCT usuario FROM pedidos WHERE estado!='2' AND estado!='10' ORDER BY id DESC");
 
             while ($usuario = mysqli_fetch_array($musuario)) {
 
@@ -872,7 +950,7 @@
                 $consulta_fecha = mysqli_query($conexion, "
                     SELECT fecha, hora, delivery, metodo_pago
                     FROM pedidos
-                    WHERE estado!='2' AND usuario='$usuario_nombre'
+                    WHERE estado!='2' AND estado!='10' AND usuario='$usuario_nombre'
                     ORDER BY id DESC
                     LIMIT 1
                 ");
@@ -885,7 +963,7 @@
                 $buscar_compra = mysqli_query($conexion, "
                     SELECT id, producto, precio, cantidad, total
                     FROM pedidos
-                    WHERE estado!='2' AND usuario='$usuario_nombre'
+                    WHERE estado!='2' AND estado!='10' AND usuario='$usuario_nombre'
                     ORDER BY id ASC
                 ");
 
@@ -900,22 +978,22 @@
                 }
 
                 $extra_delivery = 0;
-$concepto_bandejas = 0;
-$total_usuario = $subtotal_usuario;
+                $concepto_bandejas = 0;
+                $total_usuario = $subtotal_usuario;
 
-if ($delivery_actual == "delivery") {
-    $extra_delivery = 2;
-    $concepto_bandejas = 0.25 * $cantidad_total_productos;
-    $total_usuario = $subtotal_usuario + $extra_delivery + $concepto_bandejas;
-} elseif ($delivery_actual == "recoger en tienda") {
-    $extra_delivery = 0;
-    $concepto_bandejas = 0.25 * $cantidad_total_productos;
-    $total_usuario = $subtotal_usuario + $concepto_bandejas;
-} elseif ($delivery_actual == "consumo en tienda") {
-    $extra_delivery = 0;
-    $concepto_bandejas = 0;
-    $total_usuario = $subtotal_usuario;
-}
+                if ($delivery_actual == "delivery") {
+                    $extra_delivery = 2;
+                    $concepto_bandejas = 0.25 * $cantidad_total_productos;
+                    $total_usuario = $subtotal_usuario + $extra_delivery + $concepto_bandejas;
+                } elseif ($delivery_actual == "recoger en tienda") {
+                    $extra_delivery = 0;
+                    $concepto_bandejas = 0.25 * $cantidad_total_productos;
+                    $total_usuario = $subtotal_usuario + $concepto_bandejas;
+                } elseif ($delivery_actual == "consumo en tienda") {
+                    $extra_delivery = 0;
+                    $concepto_bandejas = 0;
+                    $total_usuario = $subtotal_usuario;
+                }
 
                 echo "<div class='order-card'>";
                 echo "<h3 class='order-user-title'>" . $usuario_nombre . "</h3>";
@@ -950,21 +1028,19 @@ if ($delivery_actual == "delivery") {
                             <tr>
                                 <td><?php echo $compra['id'] ?></td>
                                 <td><?php echo $compra['producto'] ?></td>
-                               <td>
-    <input 
-        type="number"
-        min="1"
-        step="1"
-        value="<?php echo $compra['cantidad'] ?>"
-        onchange="actualizar_cantidad_input('<?php echo $compra['id']; ?>','<?php echo $compra['precio']; ?>', this)"
-        style="width: 70px; padding: 6px; text-align:center; border:1px solid #d1d5db; border-radius:8px;"
-    >
-</td>
+                                <td>
+                                    <input 
+                                        type="number"
+                                        min="1"
+                                        step="1"
+                                        value="<?php echo $compra['cantidad'] ?>"
+                                        onchange="actualizar_cantidad_input('<?php echo $compra['id']; ?>','<?php echo $compra['precio']; ?>', this)"
+                                        style="width: 70px; padding: 6px; text-align:center; border:1px solid #d1d5db; border-radius:8px;"
+                                    >
+                                </td>
                                 <td><?php echo "$ " . number_format($compra['precio'], 2) ?></td>
                                 <td><?php echo "$ " . number_format($compra['total'], 2) ?></td>
                                 <td>
-                                 
-
                                     <button class="btn-delete-product"
                                         onclick="eliminar_producto('<?php echo addslashes($usuario_nombre); ?>','<?php echo addslashes($compra['producto']); ?>')">
                                         -
@@ -1001,8 +1077,8 @@ if ($delivery_actual == "delivery") {
                     </div>
 
                     <div class="delivery-cost-note">
-    Delivery suma $2.00 + $0.25 por producto. Recoger en tienda suma $0.25 por producto. Consumo en tienda no suma recargo.
-</div>
+                        Delivery suma $2.00 + $0.25 por producto. Recoger en tienda suma $0.25 por producto. Consumo en tienda no suma recargo.
+                    </div>
                 </div>
 
                 <div class="payment-box">
@@ -1032,14 +1108,14 @@ if ($delivery_actual == "delivery") {
                 </div>
 
                 <div class="summary-box">
-    <p><strong>Subtotal productos:</strong> <?php echo "$ " . number_format($subtotal_usuario, 2); ?></p>
-    <p><strong>Cantidad total de productos:</strong> <?php echo number_format($cantidad_total_productos, 2); ?></p>
-    <p><strong>Recargo delivery:</strong> <?php echo "$ " . number_format($extra_delivery, 2); ?></p>
-    <p><strong>Concepto bandejas:</strong> <?php echo "$ " . number_format($concepto_bandejas, 2); ?></p>
-    <p><strong>Total general:</strong> <?php echo "$ " . number_format($total_usuario, 2); ?></p>
-    <p><strong>Entrega actual:</strong> <?php echo $delivery_actual == "default" ? "No seleccionada" : $delivery_actual; ?></p>
-    <p><strong>Método de pago actual:</strong> <?php echo $metodo_pago_actual == "default" ? "No seleccionado" : $metodo_pago_actual; ?></p>
-</div>
+                    <p><strong>Subtotal productos:</strong> <?php echo "$ " . number_format($subtotal_usuario, 2); ?></p>
+                    <p><strong>Cantidad total de productos:</strong> <?php echo number_format($cantidad_total_productos, 2); ?></p>
+                    <p><strong>Recargo delivery:</strong> <?php echo "$ " . number_format($extra_delivery, 2); ?></p>
+                    <p><strong>Concepto bandejas:</strong> <?php echo "$ " . number_format($concepto_bandejas, 2); ?></p>
+                    <p><strong>Total general:</strong> <?php echo "$ " . number_format($total_usuario, 2); ?></p>
+                    <p><strong>Entrega actual:</strong> <?php echo $delivery_actual == "default" ? "No seleccionada" : $delivery_actual; ?></p>
+                    <p><strong>Método de pago actual:</strong> <?php echo $metodo_pago_actual == "default" ? "No seleccionado" : $metodo_pago_actual; ?></p>
+                </div>
 
                 <?php
                 echo "</div>";
@@ -1055,3 +1131,4 @@ if ($delivery_actual == "delivery") {
 </body>
 
 </html>
+
