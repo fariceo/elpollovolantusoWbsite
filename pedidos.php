@@ -95,7 +95,7 @@
 
                 $.ajax({
                     type: "POST",
-                    url: "testpedidos.php",
+                    url: "pedidos.php",
                     data: {
                         usuario: $("#usuario").val(),
                         producto: producto,
@@ -128,7 +128,7 @@
 
     $.ajax({
         type: "POST",
-        url: "testpedidos.php",
+        url: "pedidos.php",
         data: {
             registrar_venta_y_listo: 1,
             usuario_pedido_listo: usuario,
@@ -148,7 +148,7 @@
 
             $.ajax({
                 type: "POST",
-                url: "testpedidos.php",
+                url: "pedidos.php",
                 data: {
                     eliminar_producto_estado: 1,
                     usuario_eliminar: usuario,
@@ -176,7 +176,7 @@
 
             $.ajax({
                 type: "POST",
-                url: "testpedidos.php",
+                url: "pedidos.php",
                 data: { fecha: fecha, id_fecha: usuario },
                 success: function (result) {
                     $("body").html(result);
@@ -187,7 +187,7 @@
         function truncate() {
             $.ajax({
                 type: "POST",
-                url: "testpedidos.php",
+                url: "pedidos.php",
                 data: { tabla_pedidos: 1 },
                 success: function (result) {
                     $("body").html(result);
@@ -206,7 +206,7 @@
 
             $.ajax({
                 type: "POST",
-                url: "testpedidos.php",
+                url: "pedidos.php",
                 data: {
                     actualizar_cantidad: 1,
                     id_pedido_cantidad: id,
@@ -221,7 +221,7 @@
         function cambiar_delivery(usuario, tipo) {
             $.ajax({
                 type: "POST",
-                url: "testpedidos.php",
+                url: "pedidos.php",
                 data: {
                     actualizar_delivery: 1,
                     usuario_delivery: usuario,
@@ -248,7 +248,7 @@
 
                 $.ajax({
                     type: "POST",
-                    url: "testpedidos.php",
+                    url: "pedidos.php",
                     data: {
                         actualizar_metodo_pago: 1,
                         usuario_metodo_pago: usuario,
@@ -263,7 +263,7 @@
             } else {
                 $.ajax({
                     type: "POST",
-                    url: "testpedidos.php",
+                    url: "pedidos.php",
                     data: {
                         actualizar_metodo_pago: 1,
                         usuario_metodo_pago: usuario,
@@ -787,7 +787,7 @@
             INSERT INTO pedidos (usuario, producto, cantidad, precio, total, estado, delivery, metodo_pago, fecha, hora)
             VALUES ('$usuario_listo','$productos_implode','$cantidad_total','$total_general','$total_general','10','$delivery','$metodo_pago','$fecha','$hora')
         ");
-        // Cambiar estado de los pedidos a 100 (ya registrados)
+        // Cambiar estado de los pedidos a 10 (ya registrados)
         mysqli_query($conexion, "UPDATE pedidos SET estado='100' WHERE usuario='$usuario_listo' AND estado!='2' AND estado!='10'");
 
         //ahora borra el pedido igresado en pedidos y mediante un trigger registra la venta en una sola fila en la tabla ventas.
