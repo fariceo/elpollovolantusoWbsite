@@ -1030,7 +1030,460 @@ error: function(xhr, status, error) {
     }
 }
 
+/*buscar producto*/
+/* =========================
+   RESULTADOS BONITOS DE PRODUCTOS
+========================= */
 
+#ventana_buscador {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    width: 100%;
+}
+
+.resultado-producto-card {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%);
+    border: 1px solid #e5e7eb;
+    border-radius: 22px;
+    padding: 16px;
+    box-shadow:
+        0 10px 24px rgba(0, 0, 0, 0.05),
+        0 3px 10px rgba(0, 0, 0, 0.03);
+    transition: all 0.25s ease;
+    overflow: hidden;
+    position: relative;
+}
+
+.resultado-producto-card:hover {
+    transform: translateY(-3px);
+    border-color: #93c5fd;
+    box-shadow:
+        0 18px 34px rgba(37, 99, 235, 0.12),
+        0 6px 14px rgba(37, 99, 235, 0.06);
+    background: linear-gradient(135deg, #eff6ff 0%, #ffffff 100%);
+}
+
+.producto-card-top {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 16px;
+}
+
+.producto-imagen-wrap {
+    width: 72px;
+    height: 72px;
+    min-width: 72px;
+    border-radius: 18px;
+    overflow: hidden;
+    background: #f3f4f6;
+    border: 1px solid #e5e7eb;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.7);
+}
+
+.producto-imagen {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.producto-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.producto-nombre {
+    font-size: 17px;
+    font-weight: 800;
+    color: #111827;
+    line-height: 1.2;
+}
+
+.producto-sub {
+    font-size: 13px;
+    color: #6b7280;
+    font-weight: 500;
+}
+
+.producto-precio {
+    background: linear-gradient(135deg, #dbeafe, #eff6ff);
+    color: #1d4ed8;
+    font-size: 16px;
+    font-weight: 800;
+    padding: 9px 14px;
+    border-radius: 999px;
+    border: 1px solid #bfdbfe;
+    min-width: 90px;
+    text-align: center;
+    white-space: nowrap;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.7);
+}
+
+.producto-card-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: end;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.cantidad-box {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.cantidad-box label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #374151;
+}
+
+.cantidad-box input {
+    width: 110px;
+    padding: 11px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 14px;
+    outline: none;
+    font-size: 15px;
+    background: #fff;
+    transition: all 0.2s ease;
+}
+
+.cantidad-box input:focus {
+    border-color: #60a5fa;
+    box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.15);
+}
+
+.btn-agregar-producto {
+    background: linear-gradient(135deg, #16a34a, #15803d);
+    color: #ffffff;
+    border: none;
+    padding: 12px 18px;
+    border-radius: 14px;
+    font-size: 14px;
+    font-weight: 800;
+    cursor: pointer;
+    min-width: 130px;
+    transition: all 0.22s ease;
+    box-shadow: 0 10px 20px rgba(22, 163, 74, 0.22);
+}
+
+.btn-agregar-producto:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 26px rgba(22, 163, 74, 0.28);
+}
+
+.btn-agregar-producto:active {
+    transform: scale(0.98);
+}
+
+/* =========================
+   ESTADOS VACÍOS
+========================= */
+
+.empty-state {
+    text-align: center;
+    padding: 28px 18px;
+    border: 1px dashed #d1d5db;
+    border-radius: 18px;
+    background: #f9fafb;
+}
+
+.empty-icon {
+    font-size: 30px;
+    margin-bottom: 10px;
+}
+
+.empty-title {
+    font-size: 16px;
+    font-weight: 800;
+    color: #111827;
+    margin-bottom: 4px;
+}
+
+.empty-text {
+    font-size: 14px;
+    color: #6b7280;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .producto-card-top {
+        align-items: flex-start;
+    }
+
+    .producto-card-bottom {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .cantidad-box input,
+    .btn-agregar-producto {
+        width: 100%;
+    }
+
+    .producto-precio {
+        align-self: flex-start;
+    }
+} 
+
+/* =========================
+   SEARCH WRAPPER BONITO
+========================= */
+
+.search-wrapper {
+    width: 100%;
+    margin-bottom: 24px;
+    border-radius: 28px;
+    overflow: hidden;
+    background: linear-gradient(135deg, #f8fbff 0%, #eef6ff 45%, #fdfdfd 100%);
+    border: 1px solid rgba(191, 219, 254, 0.55);
+    box-shadow:
+        0 18px 40px rgba(37, 99, 235, 0.08),
+        0 4px 14px rgba(0, 0, 0, 0.04),
+        inset 0 1px 0 rgba(255,255,255,0.65);
+    position: relative;
+}
+
+/* brillo decorativo */
+.search-wrapper::before {
+    content: "";
+    position: absolute;
+    top: -70px;
+    right: -70px;
+    width: 220px;
+    height: 220px;
+    background: radial-gradient(circle, rgba(59,130,246,0.13) 0%, rgba(59,130,246,0) 72%);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.search-wrapper::after {
+    content: "";
+    position: absolute;
+    bottom: -80px;
+    left: -80px;
+    width: 240px;
+    height: 240px;
+    background: radial-gradient(circle, rgba(16,185,129,0.08) 0%, rgba(16,185,129,0) 72%);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+/* =========================
+   HEADER DEL MÓDULO
+========================= */
+
+.search-module-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    background: rgba(255, 255, 255, 0.55);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+    cursor: pointer;
+    position: relative;
+    z-index: 2;
+    transition: all 0.25s ease;
+}
+
+.search-module-header:hover {
+    background: rgba(255, 255, 255, 0.72);
+}
+
+.page-title {
+    text-align: left;
+    font-size: 26px;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0;
+    letter-spacing: -0.4px;
+}
+
+#searchModuleIcon {
+    width: 42px;
+    height: 42px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: white;
+    font-size: 24px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 10px 22px rgba(37, 99, 235, 0.22);
+    transition: all 0.25s ease;
+}
+
+.search-module-header:hover #searchModuleIcon {
+    transform: scale(1.05) rotate(3deg);
+}
+
+/* =========================
+   CONTENIDO DEL MÓDULO
+========================= */
+
+.search-module {
+    background: transparent;
+    padding: 26px;
+    margin-bottom: 0;
+    position: relative;
+    z-index: 2;
+}
+
+.collapsible-manual {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.45s ease, padding 0.45s ease;
+    padding: 0 20px;
+}
+
+.collapsible-manual.open {
+    max-height: 2200px;
+    padding: 20px;
+}
+
+.search-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.15fr;
+    gap: 22px;
+    align-items: start;
+}
+
+/* =========================
+   CARD DE INPUTS
+========================= */
+
+.field-card {
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(226, 232, 240, 0.85);
+    border-radius: 24px;
+    padding: 24px;
+    box-shadow:
+        0 10px 26px rgba(0, 0, 0, 0.04),
+        inset 0 1px 0 rgba(255,255,255,0.7);
+}
+
+.field-card label {
+    display: block;
+    font-size: 14px;
+    font-weight: 800;
+    color: #1e293b;
+    margin-bottom: 10px;
+    letter-spacing: 0.2px;
+}
+
+.field-card input {
+    width: 100%;
+    padding: 14px 16px;
+    border: 1px solid #dbe4f0;
+    border-radius: 16px;
+    outline: none;
+    font-size: 15px;
+    background: #ffffff;
+    color: #111827;
+    transition: all 0.22s ease;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.7);
+}
+
+.field-card input::placeholder {
+    color: #94a3b8;
+}
+
+.field-card input:focus {
+    border-color: #60a5fa;
+    box-shadow:
+        0 0 0 4px rgba(96, 165, 250, 0.15),
+        0 8px 20px rgba(59, 130, 246, 0.08);
+    transform: translateY(-1px);
+}
+
+/* =========================
+   CARD DE RESULTADOS
+========================= */
+
+.search-results-box {
+    background: rgba(255, 255, 255, 0.78);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(226, 232, 240, 0.85);
+    border-radius: 24px;
+    min-height: 260px;
+    padding: 22px;
+    box-shadow:
+        0 10px 26px rgba(0, 0, 0, 0.04),
+        inset 0 1px 0 rgba(255,255,255,0.7);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.results-title {
+    display: block;
+    margin-bottom: 16px;
+    font-size: 14px;
+    font-weight: 800;
+    color: #334155;
+    border-bottom: 1px solid #edf2f7;
+    padding-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+}
+
+#ventana_usuario,
+#ventana_buscador {
+    width: 100%;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 900px) {
+    .search-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 600px) {
+    .search-wrapper {
+        border-radius: 22px;
+    }
+
+    .search-module-header {
+        padding: 16px 18px;
+    }
+
+    .page-title {
+        font-size: 22px;
+    }
+
+    .search-module {
+        padding: 18px;
+    }
+
+    .field-card,
+    .search-results-box {
+        padding: 18px;
+        border-radius: 20px;
+    }
+
+    #searchModuleIcon {
+        width: 38px;
+        height: 38px;
+        font-size: 20px;
+    }
+}
     </style>
 </head>
 

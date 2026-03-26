@@ -32,22 +32,68 @@ if(isset($_POST['accion']) && $_POST['accion']=="insertar"){
 // =========================
 // BUSCAR PRODUCTOS
 // =========================
-if(isset($_POST['buscar_producto'])){
-    $buscar=mysqli_real_escape_string($conexion,$_POST['buscar_producto']);
-    $sql="SELECT * FROM menu WHERE producto LIKE '%$buscar%' ORDER BY producto ASC LIMIT 10";
-    $result=mysqli_query($conexion,$sql);
-    if(mysqli_num_rows($result)>0){
-        while($row=mysqli_fetch_assoc($result)){
-            $producto=htmlspecialchars($row['producto']);
-            $precio=number_format($row['precio'],2);
-            $idCantidad="cantidad_".preg_replace("/[^\w]/","",$producto);
+// =========================
+// BUSCAR PRODUCTOS
+// =========================
+if (isset($_POST['buscar_producto'])) {
+    $buscar = mysqli_real_escape_string($conexion, $_POST['buscar_producto']);
+
+    $sql = "SELECT * FROM menu 
+            WHERE producto LIKE '%$buscar%' 
+            ORDER BY producto ASC 
+            LIMIT 10";
+
+    $result = mysqli_query($conexion, $sql);
+
+    if (mysqli_num_rows($result) > 0) {
+        echo "<div class='results-header'>Productos encontrados</div>";
+
+        while ($row = mysqli_fetch_assoc($result)) {
+            $producto = htmlspecialchars($row['producto'], ENT_QUOTES, 'UTF-8');
+            $precioRaw = (float)$row['precio'];
+            $precio = number_format($precioRaw, 2);
+            $img = !empty($row['img']) ? htmlspecialchars($row['img'], ENT_QUOTES, 'UTF-8') : "default.png";
+            $rutaImagen = "../imagenes/" . $img;
+
+            $idCantidad = "cantidad_" . preg_replace("/[^\w]/", "", $producto);
+
             echo "
-                    <span>$producto - $$precio</span><br>
-                    <input type='number' min='1' id='$idCantidad' value='1'><br>
-                    <button onclick=\"ingresar('$producto','$precio')\">Agregar</button>
-                 ";
+            <div class='resultado-producto-card'>
+                <div class='producto-card-top'>
+                    <div class='producto-imagen-wrap'>
+                        <img src='$rutaImagen' alt='$producto' class='producto-imagen'
+                             onerror=\"this.src='../imagenes/default.png'\" />
+                    </div>
+
+                    <div class='producto-info'>
+                        <div class='producto-nombre'>$producto</div>
+                        <div class='producto-sub'>Disponible para pedido</div>
+                    </div>
+
+                    <div class='producto-precio'>$$precio</div>
+                </div>
+
+                <div class='producto-card-bottom'>
+                    <div class='cantidad-box'>
+                        <label for='$idCantidad'>Cantidad</label>
+                        <input type='number' min='1' id='$idCantidad' value='1'>
+                    </div>
+
+                    <button class='btn-agregar-producto' onclick=\"ingresar('$producto','$precioRaw')\">
+                        Agregar
+                    </button>
+                </div>
+            </div>";
         }
-    } else echo "<div>No se encontraron productos</div>";
+    } else {
+        echo "
+        <div class='empty-state'>
+            <div class='empty-icon'>🍽️</div>
+            <div class='empty-title'>Producto no encontrado</div>
+            <div class='empty-text'>No existe en el menú</div>
+        </div>";
+    }
+
     exit;
 }
 
