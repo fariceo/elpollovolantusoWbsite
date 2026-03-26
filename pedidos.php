@@ -1,19 +1,44 @@
+<?php
+// pedidos.php
+?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ingresar Pedidos</title>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
-    <script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 
+    <script>
+        // =========================
+        // CARGAR LISTA DE PEDIDOS
+        // =========================
         function mostrar_lista_pedidos() {
+            $("#lista_pedidos").html("<p>Cargando pedidos...</p>");
+
+            $.ajax({
+                type: "POST",
+                url: "pedidos_lista.php",
+                success: function(result) {
+                    $("#lista_pedidos").html(result);
+                },
+                error: function(xhr, status, error) {
+                    console.log("Error cargando pedidos:", error);
+                    console.log(xhr.responseText);
+                    $("#lista_pedidos").html("<p>Error al cargar pedidos</p>");
+                }
+            });
         }
 
-        //buscar producto
+        // =========================
+        // BUSCADOR
+        // =========================
         function perderFocoproducto() {
-            $("#ventana_buscador").html("").fadeOut();
+            setTimeout(() => {
+                $("#ventana_buscador").html("").fadeOut();
+                $("#ventana_usuario").html("");
+            }, 200);
         }
 
         function buscar_producto() {
@@ -22,9 +47,11 @@
             if (valor !== "") {
                 $.ajax({
                     type: "POST",
-                    url: "asi_sistema/info/procesar2.php",
-                    data: { buscar_producto: valor },
-                    success: function (result) {
+                    url: "pedidos_acciones.php",
+                    data: {
+                        buscar_producto: valor
+                    },
+                    success: function(result) {
                         if (result.trim() !== "") {
                             $("#ventana_buscador").html(result).fadeIn();
                         } else {
@@ -37,54 +64,40 @@
             }
         }
 
-        function add_list(e, f) {
-            var cantidad = prompt("Cantidad");
-        }
-
-        function alPerderFoco() {
-            // $("#ventana_usuario").html("");
-        }
-
         function buscar_usuario() {
-            var usuario = $("#usuario").val();
+            var usuario = $("#usuario").val().trim();
 
-            var textoConMayuscula = usuario.charAt(0).toUpperCase() + usuario.slice(1);
-            $('#usuario').val(textoConMayuscula);
+            if (usuario.length > 0) {
+                var textoConMayuscula = usuario.charAt(0).toUpperCase() + usuario.slice(1);
+                $('#usuario').val(textoConMayuscula);
+                usuario = textoConMayuscula;
+            }
 
             $.ajax({
                 type: "POST",
-                url: "asi_sistema/info/procesar2.php",
-                data: { buscar_deudor: usuario, buscar_usuario: 1 },
-                success: function (result) {
+                url: "pedidos_acciones.php",
+                data: {
+                    buscar_deudor: usuario,
+                    buscar_usuario: 1
+                },
+                success: function(result) {
                     $("#ventana_usuario").html(result);
                 }
             });
-
-            var inputUsuario = document.getElementById("usuario");
-            if (inputUsuario) {
-                inputUsuario.onblur = function () {
-                    alPerderFoco();
-                }
-            }
         }
 
         function elegir_usuario(e) {
             $("#usuario").val(e);
-
-            $.ajax({
-                type: "POST",
-                url: "asi_sistema/info/procesar2.php",
-                data: { buscar_deudor: $("#usuario").val(), buscar_usuario: "" },
-                success: function (result) {
-                    $("#ventana_usuario").html(result);
-                    $("#ventana_usuario").html("");
-                }
-            });
+            $("#ventana_usuario").html("");
         }
 
+        // =========================
+        // INSERTAR PRODUCTO
+        // =========================
         function ingresar(producto, precio) {
             if ($("#usuario").val() != "") {
-                var cantidad = $("#cantidad_" + producto.replace(/\s/g, '')).val();
+                var idCantidad = "cantidad_" + producto.replace(/\s/g, '').replace(/[^\w]/g, '');
+                var cantidad = $("#" + idCantidad).val();
 
                 if (cantidad <= 0 || cantidad === "" || isNaN(cantidad)) {
                     alert("Ingrese una cantidad válida");
@@ -95,25 +108,39 @@
 
                 $.ajax({
                     type: "POST",
-                    url: "pedidos.php",
+                    url: "pedidos_acciones.php",
                     data: {
+                        accion: "insertar",
                         usuario: $("#usuario").val(),
                         producto: producto,
                         cantidad: cantidad,
                         precio: precio,
-                        total: total,
-                        i: 1
+                        total: total
                     },
-                    success: function (result) {
-                        $("body").html(result);
-                    }
-                });
+                    success: function(result) {
+    try {
+        let data = (typeof result === "string") ? JSON.parse(result) : result;
 
-                $.ajax({
-                    type: "POST",
-                    url: "asi_sistema/info/procesar2.php",
-                    data: { producto: producto, cantidad: cantidad, restar_stock: 1 },
-                    success: function (result) {
+        if (data.success) {
+            alert("Insertado correctamente");
+            $("#producto").val("");
+            $("#ventana_buscador").html("").fadeOut();
+            mostrar_lista_pedidos();
+        } else {
+            alert("Error: " + (data.message || "No se pudo insertar"));
+        }
+    } catch (e) {
+        console.log("Respuesta inválida:", result);
+        alert("Error procesando respuesta:\n\n" + result);
+    }
+},
+error: function(xhr, status, error) {
+    console.log("Error AJAX:", error);
+    console.log(xhr.responseText);
+},
+                    error: function(xhr, status, error) {
+                        console.log("Error AJAX:", error);
+                        console.log(xhr.responseText);
                     }
                 });
 
@@ -123,159 +150,377 @@
             }
         }
 
-      function listo(usuario, total) {
-    if (!confirm("¿Marcar pedido listo y registrar venta de " + usuario + "?")) return;
-
-    $.ajax({
-        type: "POST",
-        url: "pedidos.php",
-        data: {
-            registrar_venta_y_listo: 1,
-            usuario_pedido_listo: usuario,
-            total_general_venta: total
-        },
-        success: function (result) {
-            //alert(result);
-            location.reload(); // recarga la página para reflejar cambios
-        }
-    });
-}
-
-        function eliminar_producto(usuario, producto) {
-            if (!confirm("¿Cambiar estado a 2 para este producto?\n\nUsuario: " + usuario + "\nProducto: " + producto)) {
-                return;
-            }
+        // =========================
+        // PEDIDO LISTO
+        // =========================
+        function listo(usuario, fecha, delivery, metodo_pago, grupoId) {
+            if (!confirm("¿Marcar pedido listo y registrar venta de " + usuario + "?")) return;
 
             $.ajax({
                 type: "POST",
-                url: "pedidos.php",
+                url: "pedidos_acciones.php",
                 data: {
-                    eliminar_producto_estado: 1,
-                    usuario_eliminar: usuario,
-                    producto_eliminar: producto
+                    accion: "registrar_venta_y_listo",
+                    usuario: usuario,
+                    fecha: fecha,
+                    delivery: delivery,
+                    metodo_pago: metodo_pago
                 },
-                success: function (result) {
-                    $("body").html(result);
+                success: function(result) {
+                    try {
+                        let data = JSON.parse(result);
+                        if (data.success) {
+                            $("#grupo_" + grupoId).fadeOut(300, function() {
+                                $(this).remove();
+                            });
+                        } else {
+                            alert(data.message || "No se pudo marcar como listo");
+                        }
+                    } catch (e) {
+                        console.log(result);
+                        alert("Error procesando respuesta");
+                    }
                 }
             });
         }
 
-        function cambiar_fecha(usuario, fechaActual) {
-            const hoy = new Date();
-            const año = hoy.getFullYear();
-            const mes = String(hoy.getMonth() + 1).padStart(2, '0');
-            const día = String(hoy.getDate()).padStart(2, '0');
-            const fechaFormateada = `${año}-${mes}-${día}`;
-
-            var fechaBase = fechaActual && fechaActual !== "" ? fechaActual : fechaFormateada;
-            var fecha = prompt("Cambiar fecha de " + usuario, fechaBase);
-
-            if (fecha == null || fecha.trim() === "") {
-                return;
-            }
-
-            $.ajax({
-                type: "POST",
-                url: "pedidos.php",
-                data: { fecha: fecha, id_fecha: usuario },
-                success: function (result) {
-                    $("body").html(result);
-                }
-            })
-        }
-
+        // =========================
+        // VACIAR PEDIDOS
+        // =========================
         function truncate() {
-            $.ajax({
-                type: "POST",
-                url: "pedidos.php",
-                data: { tabla_pedidos: 1 },
-                success: function (result) {
-                    $("body").html(result);
-                }
-            });
-        }
-
-        function actualizar_cantidad_input(id, precio, input) {
-            var nuevaCantidad = input.value;
-
-            if (nuevaCantidad === "" || isNaN(nuevaCantidad) || parseFloat(nuevaCantidad) <= 0) {
-                alert("Ingrese una cantidad válida");
-                input.focus();
-                return;
-            }
+            if (!confirm("¿Seguro que quieres borrar todos los pedidos?")) return;
 
             $.ajax({
                 type: "POST",
-                url: "pedidos.php",
+                url: "pedidos_acciones.php",
                 data: {
-                    actualizar_cantidad: 1,
-                    id_pedido_cantidad: id,
-                    nueva_cantidad: nuevaCantidad
+                    accion: "truncate"
                 },
-                success: function (result) {
-                    $("body").html(result);
+                success: function(result) {
+                    try {
+                        let data = JSON.parse(result);
+                        if (data.success) {
+                            $("#lista_pedidos").html("<p style='margin-top:20px;'>No hay pedidos registrados.</p>");
+                        } else {
+                            alert(data.message || "No se pudo vaciar");
+                        }
+                    } catch (e) {
+                        console.log(result);
+                        alert("Error procesando respuesta");
+                    }
                 }
             });
         }
 
-        function cambiar_delivery(usuario, tipo) {
-            $.ajax({
-                type: "POST",
-                url: "pedidos.php",
-                data: {
-                    actualizar_delivery: 1,
-                    usuario_delivery: usuario,
-                    tipo_delivery: tipo
-                },
-                success: function (result) {
-                    $("body").html(result);
-                }
-            });
-        }
+        // =========================
+        // MÉTODO DE PAGO
+        // =========================
+        function cambiar_metodo_pago(usuario, fecha, delivery, metodo, grupoId) {
+            let saldoPendiente = 0;
 
-        function cambiar_metodo_pago(usuario, metodo, total, fecha) {
             if (metodo === "fiado") {
-                var saldoPendiente = prompt("Saldo pendiente", total);
-
-                if (saldoPendiente == null || saldoPendiente.trim() === "") {
-                    return;
-                }
-
+                saldoPendiente = prompt("Saldo pendiente", "0");
+                if (saldoPendiente == null || saldoPendiente.trim() === "") return;
                 if (isNaN(saldoPendiente) || parseFloat(saldoPendiente) < 0) {
                     alert("Saldo pendiente inválido");
                     return;
                 }
+            }
 
-                $.ajax({
-                    type: "POST",
-                    url: "pedidos.php",
-                    data: {
-                        actualizar_metodo_pago: 1,
-                        usuario_metodo_pago: usuario,
-                        metodo_pago_valor: metodo,
-                        saldo_pendiente_pago: saldoPendiente,
-                        fecha_credito: fecha
-                    },
-                    success: function (result) {
-                        $("body").html(result);
+            $.ajax({
+                type: "POST",
+                url: "pedidos_acciones.php",
+                data: {
+                    accion: "actualizar_metodo_pago",
+                    usuario: usuario,
+                    fecha: fecha,
+                    delivery: delivery,
+                    metodo_pago: metodo,
+                    saldo_pendiente: saldoPendiente
+                },
+                success: function(result) {
+                    try {
+                        let data = JSON.parse(result);
+
+                        if (data.success) {
+                            actualizarResumenGrupo(grupoId, data.subtotal, data.extra_delivery, data.total_general, data.fecha);
+                        } else {
+                            alert(data.message || "No se pudo cambiar método de pago");
+                        }
+                    } catch (e) {
+                        console.log(result);
+                        alert("Error procesando respuesta");
                     }
-                });
+                }
+            });
+        }
+
+        // =========================
+        // CAMBIAR DELIVERY
+        // =========================
+        function cambiar_delivery(usuario, fecha, metodo_pago, delivery, grupoId) {
+            $.ajax({
+                type: "POST",
+                url: "pedidos_acciones.php",
+                data: {
+                    accion: "actualizar_delivery",
+                    usuario: usuario,
+                    fecha: fecha,
+                    metodo_pago: metodo_pago,
+                    delivery: delivery
+                },
+                success: function(result) {
+                    try {
+                        let data = JSON.parse(result);
+
+                        if (data.success) {
+                            actualizarResumenGrupo(grupoId, data.subtotal, data.extra_delivery, data.total_general, data.fecha);
+                        } else {
+                            alert(data.message || "No se pudo cambiar delivery");
+                        }
+                    } catch (e) {
+                        console.log(result);
+                        alert("Error procesando respuesta");
+                    }
+                }
+            });
+        }
+
+        // =========================
+        // ELIMINAR PRODUCTO
+        // =========================
+        function eliminar_producto(id, grupoId) {
+            if (!confirm("¿Eliminar este producto del pedido?")) return;
+
+            $.ajax({
+                type: "POST",
+                url: "pedidos_acciones.php",
+                data: {
+                    accion: "eliminar_producto",
+                    id_pedido: id
+                },
+                success: function(result) {
+                    try {
+                        let data = JSON.parse(result);
+
+                        if (data.success) {
+                            $("#fila_" + id).remove();
+
+                            if ($("#grupo_" + grupoId + " tbody tr").length === 0) {
+                                $("#grupo_" + grupoId).fadeOut(300, function() {
+                                    $(this).remove();
+                                });
+                            } else {
+                                actualizarResumenGrupo(grupoId, data.subtotal, data.extra_delivery, data.total_general, data.fecha);
+                            }
+                        } else {
+                            alert(data.message || "No se pudo eliminar");
+                        }
+                    } catch (e) {
+                        console.log(result);
+                        alert("Error procesando respuesta");
+                    }
+                }
+            });
+        }
+
+        // =========================
+        // EDITAR CANTIDAD
+        // =========================
+        function editar_cantidad(id, precioActual, grupoId) {
+            var nuevaCantidad = prompt("Nueva cantidad:");
+
+            if (nuevaCantidad == null || nuevaCantidad.trim() === "") return;
+            if (isNaN(nuevaCantidad) || parseFloat(nuevaCantidad) <= 0) {
+                alert("Cantidad inválida");
+                return;
+            }
+
+            $.ajax({
+                type: "POST",
+                url: "pedidos_acciones.php",
+                data: {
+                    accion: "editar_cantidad",
+                    id_pedido: id,
+                    nueva_cantidad: nuevaCantidad
+                },
+                success: function(result) {
+                    try {
+                        let data = JSON.parse(result);
+
+                        if (data.success) {
+                            $("#fila_" + id).html(`
+                                <td>${data.producto}</td>
+                                <td>${data.cantidad}</td>
+                                <td>$ ${parseFloat(data.precio).toFixed(2)}</td>
+                                <td>$ ${parseFloat(data.total).toFixed(2)}</td>
+                                <td>
+                                    <button class='btn-edit-product' onclick="editar_cantidad('${id}', '${data.precio}', '${grupoId}')">Editar</button>
+                                    <button class='btn-delete-product' onclick="eliminar_producto('${id}', '${grupoId}')">Eliminar</button>
+                                </td>
+                            `);
+
+                            actualizarResumenGrupo(grupoId, data.subtotal, data.extra_delivery, data.total_general, data.fecha);
+                        } else {
+                            alert(data.message || "No se pudo editar");
+                        }
+                    } catch (e) {
+                        console.log(result);
+                        alert("Error procesando respuesta");
+                    }
+                }
+            });
+        }
+
+        // =========================
+        // CAMBIAR FECHA
+        // =========================
+        function cambiar_fecha(usuario, fechaActual, delivery, metodo_pago, grupoId) {
+            var nuevaFecha = prompt("Nueva fecha (YYYY-MM-DD)", fechaActual);
+
+            if (nuevaFecha == null || nuevaFecha.trim() === "") return;
+
+            $.ajax({
+                type: "POST",
+                url: "pedidos_acciones.php",
+                data: {
+                    accion: "cambiar_fecha",
+                    usuario: usuario,
+                    fecha_actual: fechaActual,
+                    nueva_fecha: nuevaFecha,
+                    delivery: delivery,
+                    metodo_pago: metodo_pago
+                },
+                success: function(result) {
+                    try {
+                        let data = JSON.parse(result);
+
+                        if (data.success) {
+                            actualizarResumenGrupo(grupoId, data.subtotal, data.extra_delivery, data.total_general, data.fecha);
+                        } else {
+                            alert(data.message || "No se pudo cambiar fecha");
+                        }
+                    } catch (e) {
+                        console.log(result);
+                        alert("Error procesando respuesta");
+                    }
+                }
+            });
+        }
+
+        // =========================
+        // ACTUALIZAR RESUMEN VISUAL
+        // =========================
+        function actualizarResumenGrupo(grupoId, subtotal, extraDelivery, totalGeneral, fecha) {
+            $("#subtotal_" + grupoId).text(parseFloat(subtotal).toFixed(2));
+            $("#delivery_" + grupoId).text(parseFloat(extraDelivery).toFixed(2));
+            $("#total_" + grupoId).text(parseFloat(totalGeneral).toFixed(2));
+            $("#miniinfo_" + grupoId).text(`Fecha: ${fecha} | Total: $ ${parseFloat(totalGeneral).toFixed(2)}`);
+            $("#fecha_" + grupoId).text(fecha);
+        }
+
+        // =========================
+        // ACORDEÓN
+        // =========================
+        function toggleAccordion(id, element) {
+            const contenidoActual = document.getElementById(id);
+            const todos = document.querySelectorAll('.accordion-content');
+            const iconos = document.querySelectorAll('.accordion-icon');
+            const headers = document.querySelectorAll('.accordion-header');
+
+            todos.forEach(function(item) {
+                if (item.id !== id) item.style.display = 'none';
+            });
+
+            iconos.forEach(function(icon) {
+                icon.textContent = '+';
+            });
+
+            headers.forEach(function(header) {
+                header.classList.remove('active');
+            });
+
+            if (contenidoActual.style.display === 'block') {
+                contenidoActual.style.display = 'none';
+                element.classList.remove('active');
+                element.querySelector('.accordion-icon').textContent = '+';
             } else {
-                $.ajax({
-                    type: "POST",
-                    url: "pedidos.php",
-                    data: {
-                        actualizar_metodo_pago: 1,
-                        usuario_metodo_pago: usuario,
-                        metodo_pago_valor: metodo
-                    },
-                    success: function (result) {
-                        $("body").html(result);
-                    }
-                });
+                contenidoActual.style.display = 'block';
+                element.classList.add('active');
+                element.querySelector('.accordion-icon').textContent = '−';
+
+                setTimeout(function() {
+                    const offset = 10;
+                    const top = element.getBoundingClientRect().top + window.pageYOffset - offset;
+
+                    window.scrollTo({
+                        top: top,
+                        behavior: 'smooth'
+                    });
+                }, 50);
             }
         }
 
+        // =========================
+        // BUSCADOR COLAPSABLE
+        // =========================
+        function abrirBuscador() {
+            const modulo = document.getElementById('searchModule');
+            const icono = document.getElementById('searchModuleIcon');
+            const wrapper = document.querySelector('.search-wrapper');
+
+            if (modulo && !modulo.classList.contains('open')) {
+                modulo.classList.add('open');
+            }
+
+            if (icono) icono.textContent = '−';
+
+            if (wrapper) {
+                setTimeout(function() {
+                    wrapper.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }, 50);
+            }
+        }
+
+        function cerrarBuscador() {
+            const modulo = document.getElementById('searchModule');
+            const icono = document.getElementById('searchModuleIcon');
+
+            if (modulo) modulo.classList.remove('open');
+            if (icono) icono.textContent = '+';
+        }
+
+        function toggleSearchModule() {
+            const modulo = document.getElementById('searchModule');
+            const icono = document.getElementById('searchModuleIcon');
+            const wrapper = document.querySelector('.search-wrapper');
+
+            if (!modulo) return;
+
+            if (modulo.classList.contains('open')) {
+                modulo.classList.remove('open');
+                if (icono) icono.textContent = '+';
+            } else {
+                modulo.classList.add('open');
+                if (icono) icono.textContent = '−';
+
+                if (wrapper) {
+                    setTimeout(function() {
+                        wrapper.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }, 50);
+                }
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', function() {
+            cerrarBuscador();
+        });
     </script>
 
     <style>
@@ -358,7 +603,31 @@
             font-size: 28px;
             font-weight: bold;
             color: #111827;
-            margin-bottom: 25px;
+            margin-bottom: 0;
+        }
+
+        .search-wrapper {
+            width: 100%;
+            margin-bottom: 16px;
+            border: 1px solid #e5e7eb;
+            border-radius: 14px;
+            overflow: hidden;
+            background: #fff;
+        }
+
+        .search-module-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 16px;
+            background: #f9fafb;
+            cursor: pointer;
+            font-weight: 600;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .search-module-header:hover {
+            background: #f3f4f6;
         }
 
         .search-module {
@@ -366,7 +635,19 @@
             border-radius: 18px;
             box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
             padding: 25px;
-            margin-bottom: 30px;
+            margin-bottom: 0;
+        }
+
+        .collapsible-manual {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease, padding 0.5s ease;
+            padding: 0 15px;
+        }
+
+        .collapsible-manual.open {
+            max-height: 2000px;
+            padding: 15px;
         }
 
         .search-grid {
@@ -399,12 +680,6 @@
             outline: none;
             font-size: 15px;
             background: #fff;
-            transition: border-color 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .field-card input:focus {
-            border-color: #2563eb;
-            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
         }
 
         .search-results-box {
@@ -433,109 +708,56 @@
             display: none;
         }
 
-        .orders-section {
-            max-width: 1200px;
-            margin: 0 auto;
+        .accordion-card {
+            margin-bottom: 16px;
+            border: 1px solid #e5e7eb;
+            border-radius: 14px;
+            overflow: hidden;
+            background: #fff;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
         }
 
-        .order-card {
-            background: #ffffff;
-            border-radius: 18px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.07);
-            padding: 20px;
-            margin-bottom: 22px;
-            overflow-x: auto;
-        }
-
-        .order-user-title {
-            text-align: center;
-            font-size: 22px;
-            color: #2563eb;
-            margin-bottom: 15px;
-            font-weight: bold;
-        }
-
-        .order-meta {
+        .accordion-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
-            margin-bottom: 16px;
-            padding: 12px 14px;
-            background: #f8fafc;
-            border: 1px solid #e5e7eb;
-            border-radius: 12px;
-        }
-
-        .order-date {
-            font-size: 14px;
-            color: #374151;
-            font-weight: 600;
+            padding: 16px 18px;
             cursor: pointer;
-            padding: 8px 12px;
-            background: #ffffff;
-            border: 1px dashed #cbd5e1;
-            border-radius: 10px;
+            background: #f9fafb;
             transition: all 0.2s ease;
         }
 
-        .order-date:hover {
-            background: #eff6ff;
-            border-color: #2563eb;
-            color: #1d4ed8;
+        .accordion-header:hover {
+            background: #f3f4f6;
         }
 
-        .order-ready {
+        .accordion-header.active {
+            background: #eef2ff;
+        }
+
+        .accordion-header-left {
             display: flex;
-            align-items: center;
+            flex-direction: column;
+            gap: 4px;
         }
 
-        .ready-label {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 14px;
-            color: #111827;
-            font-weight: 600;
-            cursor: pointer;
-            background: #ffffff;
-            border: 1px solid #e5e7eb;
-            padding: 10px 14px;
-            border-radius: 10px;
-        }
-
-        .ready-label input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            cursor: pointer;
-        }
-
-        .btn-delete-product,
-        .btn-edit-product {
-            color: #ffffff;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 8px;
-            cursor: pointer;
+        .accordion-mini-info {
             font-size: 13px;
+            color: #6b7280;
+        }
+
+        .accordion-icon {
+            font-size: 24px;
             font-weight: bold;
-            transition: opacity 0.2s ease, transform 0.2s ease;
-            margin: 2px;
+            color: #374151;
+            min-width: 30px;
+            text-align: center;
         }
 
-        .btn-delete-product {
-            background: #ef4444;
-        }
-
-        .btn-edit-product {
-            background: #2563eb;
-        }
-
-        .btn-delete-product:hover,
-        .btn-edit-product:hover {
-            opacity: 0.92;
-            transform: translateY(-1px);
+        .accordion-content {
+            padding: 16px;
+            border-top: 1px solid #e5e7eb;
+            display: none;
         }
 
         .order-table {
@@ -549,14 +771,7 @@
             background: #eff6ff;
         }
 
-        .order-table th {
-            padding: 14px 10px;
-            font-size: 14px;
-            color: #1e3a8a;
-            border-bottom: 1px solid #dbeafe;
-            text-align: center;
-        }
-
+        .order-table th,
         .order-table td {
             padding: 12px 10px;
             border-bottom: 1px solid #eef2f7;
@@ -564,35 +779,52 @@
             font-size: 14px;
         }
 
-        .order-table tbody tr:hover {
-            background: #f9fbff;
-        }
-
-        .order-total-row td {
-            background: #f8fafc;
+        .btn-delete-product,
+        .btn-edit-product,
+        .btn-danger,
+        .btn-success {
+            color: #ffffff;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
             font-weight: bold;
-            border-top: 2px solid #dbeafe;
+            margin: 2px;
         }
 
-        .order-total-amount {
-            color: #2563eb;
-            font-weight: bold;
+        .btn-delete-product {
+            background: #ef4444;
         }
 
+        .btn-edit-product {
+            background: #2563eb;
+        }
+
+        .btn-danger {
+            background: #dc2626;
+            padding: 12px 22px;
+            font-size: 15px;
+            display: block;
+            margin: 20px auto;
+        }
+
+        .btn-success {
+            background: #16a34a;
+        }
+
+        .summary-box,
         .delivery-box,
         .payment-box {
-            margin-top: 18px;
+            margin-top: 16px;
             padding: 14px;
-            border: 1px solid #e5e7eb;
             border-radius: 12px;
             background: #f8fafc;
+            border: 1px solid #e5e7eb;
         }
 
-        .delivery-box h4,
-        .payment-box h4 {
-            margin-bottom: 10px;
-            color: #111827;
-            font-size: 15px;
+        .summary-box p {
+            margin: 4px 0;
         }
 
         .radio-group {
@@ -609,53 +841,33 @@
             font-size: 14px;
         }
 
-        .delivery-cost-note {
-            margin-top: 10px;
-            color: #6b7280;
-            font-size: 13px;
+        .item-buscado,
+        .item-usuario {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            text-align: left;
         }
 
-        .summary-box {
-            margin-top: 16px;
-            padding: 14px;
-            border-radius: 12px;
-            background: #eff6ff;
-            border: 1px solid #bfdbfe;
+        .item-buscado:last-child,
+        .item-usuario:last-child {
+            border-bottom: none;
         }
 
-        .summary-box p {
-            margin: 4px 0;
-            font-size: 14px;
-        }
-
-        .actions-panel {
-            text-align: center;
-            margin-top: 30px;
-        }
-
-        .btn-danger {
-            background: #dc2626;
+        .item-buscado button,
+        .item-usuario button {
+            margin-top: 8px;
+            padding: 6px 10px;
+            border: none;
+            border-radius: 6px;
+            background: #2563eb;
             color: white;
-            border: none;
-            padding: 12px 22px;
-            border-radius: 10px;
             cursor: pointer;
-            font-size: 15px;
-            font-weight: bold;
-            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
-            transition: transform 0.2s ease, opacity 0.2s ease;
         }
 
-        .btn-danger:hover {
-            transform: translateY(-1px);
-            opacity: 0.92;
-        }
-
-        hr {
-            border: none;
-            height: 1px;
-            background: #e5e7eb;
-            margin: 18px 0;
+        .item-buscado input {
+            width: 80px;
+            padding: 5px;
+            margin-top: 5px;
         }
 
         @media (max-width: 768px) {
@@ -676,17 +888,8 @@
                 width: 100%;
                 justify-content: flex-start;
             }
-
-            .order-meta {
-                flex-direction: column;
-                align-items: flex-start;
-            }
         }
     </style>
-
-
-
-
 </head>
 
 <body onload="mostrar_lista_pedidos()">
@@ -704,675 +907,60 @@
             </div>
 
             <div class="topbar-actions">
-                <a href="asi_sistema/info/pagos">
+                <a href="../asi_sistema/info/pagos">
                     <img src="imagenes/pago.png" alt="Pagos">
                 </a>
 
-                <a href="asi_sistema/info/info_ventas.php">
+                <a href="../asi_sistema/info/info_ventas.php">
                     <img src="https://elpollovolantuso.com/imagenes/historial.png" alt="Historial">
                 </a>
             </div>
         </div>
 
-       
-
-        <?php
-        error_reporting(0);
-        include("conexion.php");
-        ini_set('date.timezone', 'America/Guayaquil');
-
-        setlocale(LC_ALL, "es_ES");
-        strftime("%A %d de %B del %Y");
-
-        $fecha = date("Y-m-d");
-        $hora = date("G:i:s");
-
-        function limpiar($conexion, $valor) {
-            return mysqli_real_escape_string($conexion, trim($valor));
-        }
-
-        // cambiar fecha por usuario
-        if ($_POST['id_fecha'] != "") {
-            $usuario_fecha = limpiar($conexion, $_POST['id_fecha']);
-            $nueva_fecha = limpiar($conexion, $_POST['fecha']);
-            mysqli_query($conexion, "UPDATE pedidos SET fecha='$nueva_fecha' WHERE usuario='$usuario_fecha' AND estado!='2' AND estado!='10'");
-        }
-
-        // insertar pedido
-        if ($_POST['producto'] != "") {
-            $usuario = ucfirst(limpiar($conexion, $_POST['usuario']));
-            $producto = limpiar($conexion, $_POST['producto']);
-            $cantidad = floatval($_POST['cantidad']);
-            $precio = floatval($_POST['precio']);
-            $total = floatval($_POST['total']);
-
-            mysqli_query($conexion, "INSERT INTO pedidos (`usuario`,`producto`,`cantidad`,`precio`,`total`,`estado`,`delivery`,`metodo_pago`,`fecha`,`hora`) VALUES ('$usuario','$producto','$cantidad','$precio','$total','0','default','default','$fecha','$hora')");
-        }
-
-     if (!empty($_POST['registrar_venta_y_listo']) && !empty($_POST['usuario_pedido_listo'])) {
-    $usuario_listo = ucfirst(limpiar($conexion, $_POST['usuario_pedido_listo']));
-    $total_general_venta = isset($_POST['total_general_venta']) ? floatval($_POST['total_general_venta']) : 0;
-
-    // Obtener los pedidos pendientes del usuario
-    $consulta = mysqli_query($conexion, "
-        SELECT producto, cantidad, precio, total, delivery, metodo_pago
-        FROM pedidos 
-        WHERE usuario='$usuario_listo' AND estado!='2' AND estado!='10'
-    ");
-
-    $productos_array = [];
-    $cantidad_total = 0;
-    $total_general = 0;
-    $delivery = "default";
-    $metodo_pago = "default";
-
-    while ($fila = mysqli_fetch_assoc($consulta)) {
-        $detalle = $fila['producto'] . " x" . $fila['cantidad'] . " - $" . number_format($fila['precio'],2) . " = $" . number_format($fila['total'],2);
-        $productos_array[] = $detalle;
-
-        $cantidad_total += intval($fila['cantidad']);
-        $total_general += floatval($fila['total']);
-
-        // Tomar delivery y metodo_pago del primer pedido
-        $delivery = $fila['delivery'];
-        $metodo_pago = $fila['metodo_pago'];
-    }
-
-    if (count($productos_array) > 0) {
-        // Agrupar todos los productos en un solo string
-        $productos_implode = mysqli_real_escape_string($conexion, implode("\n", $productos_array));
-
-        // Insertar en tabla ventas
-       $result= mysqli_query($conexion, "
-            INSERT INTO pedidos (usuario, producto, cantidad, precio, total, estado, delivery, metodo_pago, fecha, hora)
-            VALUES ('$usuario_listo','$productos_implode','$cantidad_total','$total_general','$total_general','10','$delivery','$metodo_pago','$fecha','$hora')
-        ");
-        // Cambiar estado de los pedidos a 10 (ya registrados)
-        mysqli_query($conexion, "UPDATE pedidos SET estado='100' WHERE usuario='$usuario_listo' AND estado!='2' AND estado!='10'");
-
-        //ahora borra el pedido igresado en pedidos y mediante un trigger registra la venta en una sola fila en la tabla ventas.
-
-        $registrar_venta=mysqli_query($conexion,"DELETE FROM pedidos WHERE usuario='$usuario_listo' AND estado='10'");
-
-        
-    }
-
-    echo "✅ Pedido listo / Registrar venta realizado para $usuario_listo";
-
- 
-
-if (!$result) {
-    echo "Error MySQL: " . mysqli_error($conexion);
-} else {
-    echo "Insert exitoso!";
-}
-}
-        // eliminar producto (estado 2)
-        if ($_POST['eliminar_producto_estado'] != "" && $_POST['usuario_eliminar'] != "" && $_POST['producto_eliminar'] != "") {
-            $usuario_eliminar = limpiar($conexion, $_POST['usuario_eliminar']);
-            $producto_eliminar = limpiar($conexion, $_POST['producto_eliminar']);
-            mysqli_query($conexion, "UPDATE pedidos SET estado='2' WHERE usuario='$usuario_eliminar' AND producto='$producto_eliminar' AND estado!='2' AND estado!='10'");
-        }
-
-        // actualizar cantidad y total por id
-        if ($_POST['actualizar_cantidad'] != "" && $_POST['id_pedido_cantidad'] != "" && $_POST['nueva_cantidad'] != "") {
-            $idPedido = intval($_POST['id_pedido_cantidad']);
-            $nuevaCantidad = floatval($_POST['nueva_cantidad']);
-
-            $consultaPedido = mysqli_query($conexion, "SELECT precio FROM pedidos WHERE id='$idPedido' LIMIT 1");
-            if ($filaPedido = mysqli_fetch_assoc($consultaPedido)) {
-                $precioPedido = floatval($filaPedido['precio']);
-                $nuevoTotal = $precioPedido * $nuevaCantidad;
-                mysqli_query($conexion, "UPDATE pedidos SET cantidad='$nuevaCantidad', total='$nuevoTotal' WHERE id='$idPedido'");
-            }
-        }
-
-        // actualizar tipo de entrega por usuario
-        if ($_POST['actualizar_delivery'] != "" && $_POST['usuario_delivery'] != "" && $_POST['tipo_delivery'] != "") {
-            $usuarioDelivery = limpiar($conexion, $_POST['usuario_delivery']);
-            $tipoDelivery = limpiar($conexion, $_POST['tipo_delivery']);
-            mysqli_query($conexion, "UPDATE pedidos SET delivery='$tipoDelivery' WHERE usuario='$usuarioDelivery' AND estado!='2' AND estado!='10'");
-        }
-
-        // actualizar metodo de pago + fiado
-        if (
-            isset($_POST['actualizar_metodo_pago']) &&
-            isset($_POST['usuario_metodo_pago']) &&
-            isset($_POST['metodo_pago_valor']) &&
-            $_POST['usuario_metodo_pago'] != "" &&
-            $_POST['metodo_pago_valor'] != ""
-        ) {
-            $usuarioMetodo = ucfirst(limpiar($conexion, $_POST['usuario_metodo_pago']));
-            $metodoPago = limpiar($conexion, $_POST['metodo_pago_valor']);
-
-            $metodoPagoActual = "";
-            $consultaMetodoActual = mysqli_query($conexion, "
-                SELECT metodo_pago
-                FROM pedidos
-                WHERE usuario='$usuarioMetodo' AND estado!='2' AND estado!='10'
-                ORDER BY id DESC
-                LIMIT 1
-            ");
-
-            if ($consultaMetodoActual && mysqli_num_rows($consultaMetodoActual) > 0) {
-                $filaMetodoActual = mysqli_fetch_assoc($consultaMetodoActual);
-                $metodoPagoActual = trim($filaMetodoActual['metodo_pago']);
-            }
-
-            mysqli_query($conexion, "
-                UPDATE pedidos
-                SET metodo_pago='$metodoPago'
-                WHERE usuario='$usuarioMetodo' AND estado!='2' AND estado!='10'
-            ");
-
-            if ($metodoPago == "fiado" && $metodoPagoActual != "fiado") {
-                $saldoPendiente = isset($_POST['saldo_pendiente_pago']) ? floatval($_POST['saldo_pendiente_pago']) : 0;
-                $fechaCredito = isset($_POST['fecha_credito']) ? limpiar($conexion, $_POST['fecha_credito']) : "";
-
-                if ($fechaCredito == "") {
-                    $fechaCredito = $fecha;
-                }
-
-                if ($saldoPendiente > 0) {
-                    $buscarSaldo = mysqli_query($conexion, "
-                        SELECT id, saldo_pendiente
-                        FROM saldo_pendiente
-                        WHERE usuario='$usuarioMetodo'
-                        ORDER BY id DESC
-                        LIMIT 1
-                    ");
-
-                    if ($buscarSaldo && mysqli_num_rows($buscarSaldo) > 0) {
-                        $datoSaldo = mysqli_fetch_assoc($buscarSaldo);
-                        $saldoActual = floatval($datoSaldo['saldo_pendiente']);
-                        $nuevoSaldo = $saldoActual + $saldoPendiente;
-
-                        mysqli_query($conexion, "
-                            UPDATE saldo_pendiente
-                            SET saldo_pendiente='$nuevoSaldo',
-                                accion='1',
-                                fecha='$fecha',
-                                hora='$hora'
-                            WHERE id='" . $datoSaldo['id'] . "'
-                        ");
-                    } else {
-                        mysqli_query($conexion, "
-                            INSERT INTO saldo_pendiente (usuario, saldo_pendiente, accion, fecha, hora)
-                            VALUES ('$usuarioMetodo', '$saldoPendiente', '1', '$fecha', '$hora')
-                        ");
-                    }
-
-                    $conceptoHistorial = "Pedido fiado desde pedidos";
-
-                    mysqli_query($conexion, "
-                        INSERT INTO historial_credito (usuario, saldo, saldo_contable, concepto, fecha)
-                        VALUES ('$usuarioMetodo', '$saldoPendiente', '$saldoPendiente', '$conceptoHistorial', '$fechaCredito')
-                    ");
-                }
-            }
-        }
-
-        // vaciar tabla
-        if ($_POST['tabla_pedidos'] != "") {
-            mysqli_query($conexion, "TRUNCATE TABLE pedidos");
-        }
-        ?>
-<div class="search-wrapper">
-    <div class="search-module-header" onclick="toggleSearchModule()">
-         <h3 class="page-title">Ingresar Pedidos</h3>
-        <span id="searchModuleIcon">+</span>
-    </div>
-
-    <div class="search-module collapsible-manual" id="searchModule">
-        <div class="search-grid">
-            <div class="field-card">
-                <label for="usuario">Usuario</label>
-                <?php if ($_POST['usuario'] == "") { ?>
-                    <input type="text"
-                           id="usuario"
-                           onkeyup="abrirBuscador(); buscar_usuario()"
-                           onfocus="abrirBuscador()"
-                           onclick="abrirBuscador()"
-                           placeholder="Escribe el nombre del usuario">
-                <?php } else { ?>
-                    <input type="text"
-                           id="usuario"
-                           onkeyup="abrirBuscador(); buscar_usuario()"
-                           onfocus="abrirBuscador()"
-                           onclick="abrirBuscador()"
-                           value="<?php echo $_POST['usuario'] ?>"
-                           onblur="perderFocoproducto()"
-                           placeholder="Escribe el nombre del usuario">
-                <?php } ?>
-
-                <br><br>
-
-                <label for="producto">Producto</label>
-                <input type="text"
-                       id="producto"
-                       onkeyup="abrirBuscador(); buscar_producto()"
-                       onfocus="abrirBuscador()"
-                       onclick="abrirBuscador()"
-                       placeholder="Busca un producto">
+        <div class="search-wrapper">
+            <div class="search-module-header" onclick="toggleSearchModule()">
+                <h3 class="page-title">Ingresar Pedidos</h3>
+                <span id="searchModuleIcon">+</span>
             </div>
 
-            <div class="search-results-box">
-                <span class="results-title">Resultados de búsqueda</span>
-                <div id="ventana_usuario"></div>
-                <div id="ventana_buscador"></div>
+            <div class="search-module collapsible-manual" id="searchModule">
+                <div class="search-grid">
+                    <div class="field-card">
+                        <label for="usuario">Usuario</label>
+                        <input type="text"
+                            id="usuario"
+                            onkeyup="abrirBuscador(); buscar_usuario()"
+                            onfocus="abrirBuscador()"
+                            onclick="abrirBuscador()"
+                            onblur="perderFocoproducto()"
+                            placeholder="Escribe el nombre del usuario">
+
+                        <br><br>
+
+                        <label for="producto">Producto</label>
+                        <input type="text"
+                            id="producto"
+                            onkeyup="abrirBuscador(); buscar_producto()"
+                            onfocus="abrirBuscador()"
+                            onclick="abrirBuscador()"
+                            placeholder="Busca un producto">
+                    </div>
+
+                    <div class="search-results-box">
+                        <span class="results-title">Resultados de búsqueda</span>
+                        <div id="ventana_usuario"></div>
+                        
+                        <div id="ventana_buscador" style="display:none; position:absolute; background:#fff; border:1px solid #ccc; z-index:1000;"></div>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
-</div>
-
-<style>
-    .search-wrapper {
-        width: 100%;
-        margin-bottom: 16px;
-        border: 1px solid #e5e7eb;
-        border-radius: 14px;
-        overflow: hidden;
-        background: #fff;
-    }
-
-    .search-module-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 14px 16px;
-        background: #f9fafb;
-        cursor: pointer;
-        font-weight: 600;
-        border-bottom: 1px solid #e5e7eb;
-    }
-
-    .search-module-header:hover {
-        background: #f3f4f6;
-    }
-
-    .collapsible-manual {
-        max-height: 0;
-        overflow: hidden;
-        transition: max-height 0.5s ease, padding 0.5s ease;
-        padding: 0 15px;
-    }
-
-    .collapsible-manual.open {
-        max-height: 2000px;
-        padding: 15px;
-    }
-</style>
-
-<script>
-function abrirBuscador() {
-    const modulo = document.getElementById('searchModule');
-    const icono = document.getElementById('searchModuleIcon');
-    const wrapper = document.querySelector('.search-wrapper');
-
-    if (modulo && !modulo.classList.contains('open')) {
-        modulo.classList.add('open');
-    }
-
-    if (icono) {
-        icono.textContent = '−';
-    }
-
-    if (wrapper) {
-        setTimeout(function() {
-            wrapper.scrollIntoView({
-                behavior: 'smooth',
-                block: 'start'
-            });
-        }, 50);
-    }
-}
-
-function cerrarBuscador() {
-    const modulo = document.getElementById('searchModule');
-    const icono = document.getElementById('searchModuleIcon');
-
-    if (modulo) {
-        modulo.classList.remove('open');
-    }
-
-    if (icono) {
-        icono.textContent = '+';
-    }
-}
-
-function toggleSearchModule() {
-    const modulo = document.getElementById('searchModule');
-    const icono = document.getElementById('searchModuleIcon');
-    const wrapper = document.querySelector('.search-wrapper');
-
-    if (!modulo) return;
-
-    if (modulo.classList.contains('open')) {
-        modulo.classList.remove('open');
-        if (icono) icono.textContent = '+';
-    } else {
-        modulo.classList.add('open');
-        if (icono) icono.textContent = '−';
-
-        if (wrapper) {
-            setTimeout(function() {
-                wrapper.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
-            }, 50);
-        }
-    }
-}
-
-window.addEventListener('DOMContentLoaded', function() {
-    cerrarBuscador();
-});
-</script>
 
         <div style="text-align:center" id="lista_pedidos"></div>
-<h3 style="text-align:center">Ordenes</h3>
-        <div class="orders-section">
-    <?php
-    $musuario = mysqli_query($conexion, "SELECT DISTINCT usuario FROM pedidos WHERE estado!='2' AND estado!='10' ORDER BY id DESC");
-    $index_acordeon = 0;
 
-    while ($usuario = mysqli_fetch_array($musuario)) {
-
-        $usuario_nombre = $usuario['usuario'];
-
-        $consulta_fecha = mysqli_query($conexion, "
-            SELECT fecha, hora, delivery, metodo_pago
-            FROM pedidos
-            WHERE estado!='2' AND estado!='10' AND usuario='$usuario_nombre'
-            ORDER BY id DESC
-            LIMIT 1
-        ");
-        $datos_fecha = mysqli_fetch_array($consulta_fecha);
-        $fecha_pedido = $datos_fecha['fecha'] ?? '';
-        $hora_pedido = $datos_fecha['hora'] ?? '';
-        $delivery_actual = $datos_fecha['delivery'] ?? 'default';
-        $metodo_pago_actual = $datos_fecha['metodo_pago'] ?? 'default';
-
-        $buscar_compra = mysqli_query($conexion, "
-            SELECT id, producto, precio, cantidad, total
-            FROM pedidos
-            WHERE estado!='2' AND estado!='10' AND usuario='$usuario_nombre'
-            ORDER BY id ASC
-        ");
-
-        $productos = [];
-        $subtotal_usuario = 0;
-        $cantidad_total_productos = 0;
-
-        while ($compra = mysqli_fetch_array($buscar_compra)) {
-            $productos[] = $compra;
-            $subtotal_usuario += floatval($compra['total']);
-            $cantidad_total_productos += floatval($compra['cantidad']);
-        }
-
-        $extra_delivery = 0;
-        $concepto_bandejas = 0;
-        $total_usuario = $subtotal_usuario;
-
-        if ($delivery_actual == "delivery") {
-            $extra_delivery = 2;
-            $concepto_bandejas = 0.25 * $cantidad_total_productos;
-            $total_usuario = $subtotal_usuario + $extra_delivery + $concepto_bandejas;
-        } elseif ($delivery_actual == "recoger en tienda") {
-            $extra_delivery = 0;
-            $concepto_bandejas = 0.25 * $cantidad_total_productos;
-            $total_usuario = $subtotal_usuario + $concepto_bandejas;
-        } elseif ($delivery_actual == "consumo en tienda") {
-            $extra_delivery = 0;
-            $concepto_bandejas = 0;
-            $total_usuario = $subtotal_usuario;
-        }
-
-        $accordion_id = "order_content_" . $index_acordeon;
-        ?>
-
-        <div class="order-card accordion-card">
-            <div class="accordion-header" onclick="toggleAccordion('<?php echo $accordion_id; ?>', this)">
-                <div class="accordion-header-left">
-                    <h3 class="order-user-title"><?php echo $usuario_nombre; ?></h3>
-                    <div class="accordion-mini-info">
-                        Fecha: <?php echo $fecha_pedido; ?> | Hora: <?php echo $hora_pedido; ?> |
-                        Total: <?php echo "$ " . number_format($total_usuario, 2); ?>
-                    </div>
-                </div>
-                <div class="accordion-icon">+</div>
-            </div>
-
-            <div class="accordion-content" id="<?php echo $accordion_id; ?>" style="display: none;">
-
-                <table class="order-table">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Producto</th>
-                            <th>Cantidad</th>
-                            <th>Precio</th>
-                            <th>Total</th>
-                            <th>Acción</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($productos as $compra): ?>
-                            <tr>
-                                <td><?php echo $compra['id'] ?></td>
-                                <td><?php echo $compra['producto'] ?></td>
-                                <td>
-                                    <input 
-                                        type="number"
-                                        min="1"
-                                        step="1"
-                                        value="<?php echo $compra['cantidad'] ?>"
-                                        onchange="actualizar_cantidad_input('<?php echo $compra['id']; ?>','<?php echo $compra['precio']; ?>', this)"
-                                        style="width: 70px; padding: 6px; text-align:center; border:1px solid #d1d5db; border-radius:8px;"
-                                    >
-                                </td>
-                                <td><?php echo "$ " . number_format($compra['precio'], 2) ?></td>
-                                <td><?php echo "$ " . number_format($compra['total'], 2) ?></td>
-                                <td>
-                                    <button class="btn-delete-product"
-                                        onclick="eliminar_producto('<?php echo addslashes($usuario_nombre); ?>','<?php echo addslashes($compra['producto']); ?>')">
-                                        -
-                                    </button>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-
-                <div class="delivery-box">
-                    <h4>Tipo de entrega</h4>
-                    <div class="radio-group">
-                        <label>
-                            <input type="radio" name="delivery_<?php echo md5($usuario_nombre); ?>" value="delivery"
-                                <?php echo ($delivery_actual == "delivery") ? "checked" : ""; ?>
-                                onchange="cambiar_delivery('<?php echo addslashes($usuario_nombre); ?>','delivery')">
-                            Delivery
-                        </label>
-
-                        <label>
-                            <input type="radio" name="delivery_<?php echo md5($usuario_nombre); ?>" value="consumo en tienda"
-                                <?php echo ($delivery_actual == "consumo en tienda") ? "checked" : ""; ?>
-                                onchange="cambiar_delivery('<?php echo addslashes($usuario_nombre); ?>','consumo en tienda')">
-                            Consumo en tienda
-                        </label>
-
-                        <label>
-                            <input type="radio" name="delivery_<?php echo md5($usuario_nombre); ?>" value="recoger en tienda"
-                                <?php echo ($delivery_actual == "recoger en tienda") ? "checked" : ""; ?>
-                                onchange="cambiar_delivery('<?php echo addslashes($usuario_nombre); ?>','recoger en tienda')">
-                            Recoger en tienda
-                        </label>
-                    </div>
-
-                    <div class="delivery-cost-note">
-                        Delivery suma $2.00 + $0.25 por producto. Recoger en tienda suma $0.25 por producto. Consumo en tienda no suma recargo.
-                    </div>
-                </div>
-
-                <div class="payment-box">
-                    <h4>Método de pago</h4>
-                    <div class="radio-group">
-                        <label>
-                            <input type="radio" name="metodo_pago_<?php echo md5($usuario_nombre); ?>" value="efectivo"
-                                <?php echo ($metodo_pago_actual == "efectivo") ? "checked" : ""; ?>
-                                onchange="cambiar_metodo_pago('<?php echo addslashes($usuario_nombre); ?>','efectivo','<?php echo $total_usuario; ?>','<?php echo $fecha_pedido; ?>')">
-                            Efectivo
-                        </label>
-
-                        <label>
-                            <input type="radio" name="metodo_pago_<?php echo md5($usuario_nombre); ?>" value="fiado"
-                                <?php echo ($metodo_pago_actual == "fiado") ? "checked" : ""; ?>
-                                onchange="cambiar_metodo_pago('<?php echo addslashes($usuario_nombre); ?>','fiado','<?php echo $total_usuario; ?>','<?php echo $fecha_pedido; ?>')">
-                            Fiado
-                        </label>
-
-                        <label>
-                            <input type="radio" name="metodo_pago_<?php echo md5($usuario_nombre); ?>" value="transferencia"
-                                <?php echo ($metodo_pago_actual == "transferencia") ? "checked" : ""; ?>
-                                onchange="cambiar_metodo_pago('<?php echo addslashes($usuario_nombre); ?>','transferencia','<?php echo $total_usuario; ?>','<?php echo $fecha_pedido; ?>')">
-                            Transferencia
-                        </label>
-                    </div>
-                </div>
-
-                <div class="summary-box">
-                    <p><strong>Subtotal productos:</strong> <?php echo "$ " . number_format($subtotal_usuario, 2); ?></p>
-                    <p><strong>Cantidad total de productos:</strong> <?php echo number_format($cantidad_total_productos, 2); ?></p>
-                    <p><strong>Recargo delivery:</strong> <?php echo "$ " . number_format($extra_delivery, 2); ?></p>
-                    <p><strong>Concepto bandejas:</strong> <?php echo "$ " . number_format($concepto_bandejas, 2); ?></p>
-                    <p><strong>Total general:</strong> <?php echo "$ " . number_format($total_usuario, 2); ?></p>
-                    <p><strong>Entrega actual:</strong> <?php echo $delivery_actual == "default" ? "No seleccionada" : $delivery_actual; ?></p>
-                    <p><strong>Método de pago actual:</strong> <?php echo $metodo_pago_actual == "default" ? "No seleccionado" : $metodo_pago_actual; ?></p>
-                </div>
-
-                <div class="order-meta">
-                    <div class="order-date" onclick="cambiar_fecha('<?php echo addslashes($usuario_nombre); ?>','<?php echo $fecha_pedido; ?>')">
-                        Fecha: <?php echo $fecha_pedido; ?> | Hora: <?php echo $hora_pedido; ?>
-                    </div>
-
-                    <div class="order-ready">
-                        <label class="ready-label">
-                            <input type="checkbox" onchange="listo('<?php echo addslashes($usuario_nombre); ?>','<?php echo $total_usuario; ?>')">
-                            <span>Pedido listo / Registrar venta</span>
-                        </label>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-
-        <?php
-        $index_acordeon++;
-    }
-    ?>
-</div>
-<script>
-function toggleAccordion(id, element) {
-    const contenidoActual = document.getElementById(id);
-    const todos = document.querySelectorAll('.accordion-content');
-    const iconos = document.querySelectorAll('.accordion-icon');
-    const headers = document.querySelectorAll('.accordion-header');
-
-    todos.forEach(function(item) {
-        if (item.id !== id) {
-            item.style.display = 'none';
-        }
-    });
-
-    iconos.forEach(function(icon) {
-        icon.textContent = '+';
-    });
-
-    headers.forEach(function(header) {
-        header.classList.remove('active');
-    });
-
-    if (contenidoActual.style.display === 'block') {
-        contenidoActual.style.display = 'none';
-        element.classList.remove('active');
-        element.querySelector('.accordion-icon').textContent = '+';
-    } else {
-        contenidoActual.style.display = 'block';
-        element.classList.add('active');
-        element.querySelector('.accordion-icon').textContent = '−';
-
-        setTimeout(function() {
-            const offset = 10;
-            const top = element.getBoundingClientRect().top + window.pageYOffset - offset;
-
-            window.scrollTo({
-                top: top,
-                behavior: 'smooth'
-            });
-        }, 50);
-    }
-}
-</script>
-<style>
-.accordion-card {
-    margin-bottom: 16px;
-    border: 1px solid #e5e7eb;
-    border-radius: 14px;
-    overflow: hidden;
-    background: #fff;
-    box-shadow: 0 4px 14px rgba(0,0,0,0.06);
-}
-
-.accordion-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 16px 18px;
-    cursor: pointer;
-    background: #f9fafb;
-    transition: all 0.2s ease;
-}
-
-.accordion-header:hover {
-    background: #f3f4f6;
-}
-
-.accordion-header.active {
-    background: #eef2ff;
-}
-
-.accordion-header-left {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.accordion-mini-info {
-    font-size: 13px;
-    color: #6b7280;
-}
-
-.accordion-icon {
-    font-size: 24px;
-    font-weight: bold;
-    color: #374151;
-    min-width: 30px;
-    text-align: center;
-}
-
-.accordion-content {
-    padding: 16px;
-    border-top: 1px solid #e5e7eb;
-}
-</style>
-
-        <div class="actions-panel">
-            <button class="btn-danger" onClick="truncate()">Borrar tablas</button>
-        </div>
-    
+        <button class="btn-danger" onClick="truncate()">Vaciar pedidos</button>
+    </div>
 
 </body>
 
 </html>
-
