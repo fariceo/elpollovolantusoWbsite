@@ -22,11 +22,6 @@
                 url: "pedidos_lista.php",
                 success: function(result) {
                     $("#lista_pedidos").html(result);
-                },
-                error: function(xhr, status, error) {
-                    console.log("Error cargando pedidos:", error);
-                    console.log(xhr.responseText);
-                    $("#lista_pedidos").html("<p>Error al cargar pedidos</p>");
                 }
             });
         }
@@ -102,42 +97,39 @@
                 var total = parseFloat(cantidad) * parseFloat(precio);
 
                 $.ajax({
-                    type: "POST",
-                    url: "pedidos_acciones.php",
-                    data: {
-                        accion: "insertar",
-                        usuario: $("#usuario").val(),
-                        producto: producto,
-                        cantidad: cantidad,
-                        precio: precio,
-                        total: total
-                    },
-                    success: function(result) {
-    try {
-        let data = (typeof result === "string") ? JSON.parse(result) : result;
+    type: "POST",
+    url: "pedidos_acciones.php",
+    data: {
+        accion: "insertar",
+        usuario: $("#usuario").val(),
+        producto: producto,
+        cantidad: cantidad,
+        precio: precio,
+        total: total
+    },
+    success: function(result) {
+        try {
+            let data = (typeof result === "string") ? JSON.parse(result) : result;
 
-        if (data.success) {
-            alert("Insertado correctamente");
-            $("#producto").val("");
-            $("#ventana_buscador").html("").fadeOut();
-            mostrar_lista_pedidos();
-        } else {
-            alert("Error: " + (data.message || "No se pudo insertar"));
+            if (data.success) {
+                alert("Insertado correctamente");
+                $("#producto").val("");
+                $("#ventana_buscador").html("").fadeOut();
+                mostrar_lista_pedidos();
+            } else {
+                alert("Error: " + (data.message || "No se pudo insertar"));
+            }
+        } catch (e) {
+            console.log("Respuesta inválida:", result);
+            alert("Error procesando respuesta:\n\n" + result);
         }
-    } catch (e) {
-        console.log("Respuesta inválida:", result);
-        alert("Error procesando respuesta:\n\n" + result);
+    },
+    error: function(xhr, status, error) {
+        console.log("Error AJAX:", error);
+        console.log(xhr.responseText);
+        alert("Error AJAX:\n" + xhr.responseText);
     }
-},
-error: function(xhr, status, error) {
-    console.log("Error AJAX:", error);
-    console.log(xhr.responseText);
-},
-                    error: function(xhr, status, error) {
-                        console.log("Error AJAX:", error);
-                        console.log(xhr.responseText);
-                    }
-                });
+});
 
             } else {
                 alert("Introducir Usuario");
@@ -322,50 +314,57 @@ error: function(xhr, status, error) {
         // =========================
         // EDITAR CANTIDAD
         // =========================
-        function editar_cantidad(id, precioActual, grupoId) {
-            var nuevaCantidad = prompt("Nueva cantidad:");
 
-            if (nuevaCantidad == null || nuevaCantidad.trim() === "") return;
-            if (isNaN(nuevaCantidad) || parseFloat(nuevaCantidad) <= 0) {
-                alert("Cantidad inválida");
-                return;
+function editar_cantidad(id, precioActual, grupoId) {
+    var nuevaCantidad = prompt("Nueva cantidad:");
+
+    if (nuevaCantidad == null || nuevaCantidad.trim() === "") return;
+    if (isNaN(nuevaCantidad) || parseFloat(nuevaCantidad) <= 0) {
+        alert("Cantidad inválida");
+        return;
+    }
+
+    $.ajax({
+        type: "POST",
+        url: "pedidos_acciones.php",
+        dataType: "json",
+        data: {
+            accion: "editar_cantidad",
+            id_pedido: id,
+            nueva_cantidad: nuevaCantidad
+        },
+        success: function(data) {
+            if (data.success) {
+                $("#fila_" + id).html(`
+                    <td>${data.producto}</td>
+                    <td>${parseFloat(data.cantidad).toFixed(2)}</td>
+                    <td>$ ${parseFloat(data.precio).toFixed(2)}</td>
+                    <td>$ ${parseFloat(data.total).toFixed(2)}</td>
+                    <td>
+                        <button class="btn-edit-product" onclick="editar_cantidad(${id}, ${data.precio}, ${grupoId})">Editar</button>
+                        <button class="btn-delete-product" onclick="eliminar_producto(${id}, ${grupoId})">Eliminar</button>
+                    </td>
+                `);
+
+                actualizarResumenGrupo(
+                    grupoId,
+                    data.subtotal,
+                    data.extra_delivery,
+                    data.total_general,
+                    data.fecha
+                );
+            } else {
+                alert(data.message || "No se pudo editar");
             }
-
-            $.ajax({
-                type: "POST",
-                url: "pedidos_acciones.php",
-                data: {
-                    accion: "editar_cantidad",
-                    id_pedido: id,
-                    nueva_cantidad: nuevaCantidad
-                },
-                success: function(result) {
-                    try {
-                        let data = JSON.parse(result);
-
-                        if (data.success) {
-                            $("#fila_" + id).html(`
-                                <td>${data.producto}</td>
-                                <td>${data.cantidad}</td>
-                                <td>$ ${parseFloat(data.precio).toFixed(2)}</td>
-                                <td>$ ${parseFloat(data.total).toFixed(2)}</td>
-                                <td>
-                                    <button class='btn-edit-product' onclick="editar_cantidad('${id}', '${data.precio}', '${grupoId}')">Editar</button>
-                                    <button class='btn-delete-product' onclick="eliminar_producto('${id}', '${grupoId}')">Eliminar</button>
-                                </td>
-                            `);
-
-                            actualizarResumenGrupo(grupoId, data.subtotal, data.extra_delivery, data.total_general, data.fecha);
-                        } else {
-                            alert(data.message || "No se pudo editar");
-                        }
-                    } catch (e) {
-                        console.log(result);
-                        alert("Error procesando respuesta");
-                    }
-                }
-            });
+        },
+        error: function(xhr, status, error) {
+            console.log("Error AJAX editar_cantidad:", error);
+            console.log("Respuesta del servidor:", xhr.responseText);
+            alert("Error procesando respuesta del servidor");
         }
+    });
+}
+
 
         // =========================
         // CAMBIAR FECHA
@@ -406,13 +405,15 @@ error: function(xhr, status, error) {
         // =========================
         // ACTUALIZAR RESUMEN VISUAL
         // =========================
-        function actualizarResumenGrupo(grupoId, subtotal, extraDelivery, totalGeneral, fecha) {
-            $("#subtotal_" + grupoId).text(parseFloat(subtotal).toFixed(2));
-            $("#delivery_" + grupoId).text(parseFloat(extraDelivery).toFixed(2));
-            $("#total_" + grupoId).text(parseFloat(totalGeneral).toFixed(2));
-            $("#miniinfo_" + grupoId).text(`Fecha: ${fecha} | Total: $ ${parseFloat(totalGeneral).toFixed(2)}`);
-            $("#fecha_" + grupoId).text(fecha);
-        }
+      function actualizarResumenGrupo(grupoId, subtotal, extraDelivery, totalGeneral, fecha) {
+    $("#subtotal_" + grupoId).text(parseFloat(subtotal).toFixed(2));
+    $("#delivery_" + grupoId).text(parseFloat(extraDelivery).toFixed(2));
+    $("#total_" + grupoId).text(parseFloat(totalGeneral).toFixed(2));
+    $("#total_resumen_" + grupoId).text(parseFloat(totalGeneral).toFixed(2));
+    $("#fecha_" + grupoId).text(fecha);
+    $("#fecha_detalle_" + grupoId).text(fecha);
+    $("#miniinfo_" + grupoId).html(`Fecha: <span id="fecha_${grupoId}">${fecha}</span> | Total: $ <span id="total_${grupoId}">${parseFloat(totalGeneral).toFixed(2)}</span>`);
+}
 
         // =========================
         // ACORDEÓN
