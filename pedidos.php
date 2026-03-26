@@ -65,14 +65,9 @@
         }
 
         function buscar_usuario() {
+            
             var usuario = $("#usuario").val().trim();
-
-            if (usuario.length > 0) {
-                var textoConMayuscula = usuario.charAt(0).toUpperCase() + usuario.slice(1);
-                $('#usuario').val(textoConMayuscula);
-                usuario = textoConMayuscula;
-            }
-
+            console.log("Buscando usuario:", usuario);
             $.ajax({
                 type: "POST",
                 url: "pedidos_acciones.php",
@@ -704,9 +699,7 @@ error: function(xhr, status, error) {
             width: 100%;
         }
 
-        #ventana_buscador {
-            display: none;
-        }
+
 
         .accordion-card {
             margin-bottom: 16px;
@@ -889,6 +882,155 @@ error: function(xhr, status, error) {
                 justify-content: flex-start;
             }
         }
+
+
+        /* =========================
+   TARJETA BONITA DE USUARIO
+========================= */
+
+.resultado-usuario-card {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 18px 18px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%);
+    border: 1px solid #e5e7eb;
+    box-shadow: 
+        0 10px 25px rgba(0, 0, 0, 0.05),
+        0 2px 8px rgba(0, 0, 0, 0.03);
+    cursor: pointer;
+    overflow: hidden;
+    transition: all 0.28s ease;
+}
+
+.resultado-usuario-card:hover {
+    transform: translateY(-3px) scale(1.01);
+    border-color: #93c5fd;
+    box-shadow: 
+        0 18px 38px rgba(37, 99, 235, 0.14),
+        0 4px 14px rgba(37, 99, 235, 0.08);
+    background: linear-gradient(135deg, #eff6ff 0%, #ffffff 100%);
+}
+
+.usuario-card-glow {
+    position: absolute;
+    top: -40px;
+    right: -40px;
+    width: 110px;
+    height: 110px;
+    background: radial-gradient(circle, rgba(59,130,246,0.18) 0%, rgba(59,130,246,0) 70%);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.resultado-usuario-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    z-index: 1;
+}
+
+.resultado-avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 18px;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    font-weight: 800;
+    box-shadow: 0 10px 22px rgba(37, 99, 235, 0.28);
+    flex-shrink: 0;
+}
+
+.resultado-avatar span {
+    transform: translateY(-1px);
+}
+
+.resultado-info {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.resultado-nombre {
+    font-size: 17px;
+    font-weight: 800;
+    color: #111827;
+    letter-spacing: -0.2px;
+}
+
+.resultado-sub {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #6b7280;
+    font-weight: 500;
+}
+
+.estado-dot {
+    width: 9px;
+    height: 9px;
+    background: #22c55e;
+    border-radius: 50%;
+    box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.15);
+    flex-shrink: 0;
+}
+
+.resultado-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+    z-index: 1;
+}
+
+.saldo-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+}
+
+.resultado-saldo {
+    background: linear-gradient(135deg, #dcfce7, #f0fdf4);
+    color: #166534;
+    font-size: 16px;
+    font-weight: 800;
+    padding: 9px 14px;
+    border-radius: 999px;
+    border: 1px solid #bbf7d0;
+    min-width: 95px;
+    text-align: center;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.7);
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .resultado-usuario-card {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 14px;
+    }
+
+    .resultado-right {
+        width: 100%;
+        align-items: flex-start;
+    }
+
+    .resultado-saldo {
+        min-width: auto;
+    }
+}
+
+
     </style>
 </head>
 
@@ -898,7 +1040,7 @@ error: function(xhr, status, error) {
         <div class="topbar">
             <div class="topbar-left">
                 <a href="admin">
-                    <img src="imagenes/logo.jpeg" style="height:55px; width:55px;">
+                    <img src="../imagenes/logo.jpeg" style="height:55px; width:55px;">
                 </a>
                 <div class="topbar-text">
                     <h2>Panel de Pedidos</h2>
@@ -908,7 +1050,7 @@ error: function(xhr, status, error) {
 
             <div class="topbar-actions">
                 <a href="../asi_sistema/info/pagos">
-                    <img src="imagenes/pago.png" alt="Pagos">
+                    <img src="../imagenes/pago.png" alt="Pagos">
                 </a>
 
                 <a href="../asi_sistema/info/info_ventas.php">
@@ -946,11 +1088,11 @@ error: function(xhr, status, error) {
                             placeholder="Busca un producto">
                     </div>
 
-                    <div class="search-results-box">
+                    <div class="search-results-box" style="text-align:center">
                         <span class="results-title">Resultados de búsqueda</span>
                         <div id="ventana_usuario"></div>
                         
-                        <div id="ventana_buscador" style="display:none; position:absolute; background:#fff; border:1px solid #ccc; z-index:1000;"></div>
+                        <div id="ventana_buscador" style=" background:#fff; border:1px solid #ccc; z-index:1000;"></div>
                     </div>
                 </div>
             </div>
