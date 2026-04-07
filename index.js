@@ -282,3 +282,31 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     });
 });
+
+window.addEventListener('DOMContentLoaded', () => {
+    const btnBuscar = document.getElementById("btnBuscar");
+    const contenedorBusqueda = document.getElementById("contenedorBusqueda");
+    const inputBuscar = document.getElementById("inputBuscar");
+
+    if (btnBuscar && contenedorBusqueda && inputBuscar) {
+        // Mostrar / ocultar al pulsar lupa
+        btnBuscar.addEventListener("click", function (e) {
+            e.stopPropagation();
+            contenedorBusqueda.classList.toggle("mostrar");
+
+            if (contenedorBusqueda.classList.contains("mostrar")) {
+                inputBuscar.focus();
+            }
+        });
+
+        // Evitar que se cierre al hacer clic dentro del input
+        contenedorBusqueda.addEventListener("click", function (e) {
+            e.stopPropagation();
+        });
+
+        // Ocultar si se hace clic fuera
+        document.addEventListener("click", function () {
+            contenedorBusqueda.classList.remove("mostrar");
+        });
+    }
+});

@@ -1062,7 +1062,7 @@ window.addEventListener('DOMContentLoaded', function() {
 
 <body onload="mostrar_lista_pedidos()">
 
-    <div class="main-panel">
+    <div class="main-panel">    
         <div class="topbar">
             <div class="topbar-left">
                 <a href="../admin">

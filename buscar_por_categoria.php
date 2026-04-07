@@ -35,43 +35,18 @@ while ($f = $res->fetch_assoc()) {
         : "<div style='width:150px; height:120px; background:#eee; display:flex; align-items:center; justify-content:center; border-radius:10px;'>Sin imagen</div>";
 
     echo "
-    <tr>
-        <td style='padding:10px;'>
-            <div style='
-                text-align:center; 
-                border:2px solid #ffc107; 
-                border-radius:10px; 
-                padding:10px; 
-                width:170px; 
-                background:white; 
-                transition: transform 0.3s, box-shadow 0.3s;
-                cursor:pointer;
-                box-shadow:2px 2px 6px rgba(0,0,0,0.1);
-            ' 
-            onmouseover='this.style.transform=\"translateY(-5px)\"; this.style.boxShadow=\"4px 4px 12px rgba(0,0,0,0.2)\";' 
-            onmouseout='this.style.transform=\"translateY(0)\"; this.style.boxShadow=\"2px 2px 6px rgba(0,0,0,0.1)\";'>
-                <h4 style='margin:5px 0; color:#ff9800;'>$p</h4>
-                $imgTag
-                <p style='margin:8px 0; font-weight:bold; color:#4caf50;'>$$pr</p>
-                <button class='agregarBtn' data-producto='$p' data-precio='$pr' 
-                    style='
-                        color:#ffc107; 
-                        background:white; 
-                        border:2px solid #ffc107; 
-                        padding:5px 10px; 
-                        border-radius:5px; 
-                        cursor:pointer;
-                        font-weight:bold;
-                        transition: all 0.3s;
-                    '
-                    onmouseover='this.style.background=\"#ffc107\"; this.style.color=\"white\"; this.style.boxShadow=\"0 0 10px #ffc107\";'
-                    onmouseout='this.style.background=\"white\"; this.style.color=\"#ffc107\"; this.style.boxShadow=\"none\";'
-                >
-                    ➕ 🛒 Añadir
-                </button>
-            </div>
-        </td>
-    </tr>
-    ";
+<tr>
+    <td style='padding:10px;'>
+        <div class='producto-card'>
+            <h4 class='producto-titulo'>$p</h4>
+            $imgTag
+            <p class='producto-precio'>$$pr</p>
+            <button class='agregarBtn' data-producto='$p' data-precio='$pr'>
+                ➕ 🛒 Añadir
+            </button>
+        </div>
+    </td>
+</tr>
+";
 }
 ?>

@@ -39,20 +39,29 @@ if ($row = mysqli_fetch_assoc($result)) {
   </h2>
 
   
-  <!-- Botón lupa -->
-  <button id="btnBuscar" style="margin-left:10px; font-size:20px; cursor:pointer;">
-  <i class="fas fa-search"></i>
-</button>
-  <!-- Input de búsqueda -->
-    <input type="text" id="inputBuscar" placeholder="Escribe el nombre del producto">
-
-    <!-- Contenedor donde se mostrarán los productos -->
-    <div id="resultadoBusqueda" style="display:flex; flex-wrap:wrap; justify-content:center; gap:15px; margin-top:15px;"></div>
-
-
+ 
+  
+  <!-- Contenedor botones laterales -->
+<div class="botones-laterales">
   <button id="btnMenuHamburguesa">
     <i class="fas fa-utensils"></i>
   </button>
+
+   <!-- Botón lupa -->
+  <button id="btnBuscar" style="margin-left:10px; font-size:20px; cursor:pointer;">
+  <i class="fas fa-search"></i>
+</button>
+
+
+
+</div>
+
+  <!-- Input de búsqueda oculto -->
+  <div id="contenedorBusqueda">
+    <input type="text" id="inputBuscar" placeholder="Escribe el nombre del producto">
+  </div>
+
+
 
   <?php if (isset($_SESSION['usuario'])): ?>
     <!-- Usuario logueado -->
@@ -95,7 +104,7 @@ if ($row = mysqli_fetch_assoc($result)) {
 
 
   <!-- Tabla -->
-  <div class="tabla-wrapper">
+  <div class="tabla-wrapper" id="zonaProductos">
     <table id="tablaMenu">
         <tbody></tbody>
     </table>
