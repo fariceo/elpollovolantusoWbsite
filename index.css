@@ -1,0 +1,481 @@
+/* --- Reset básico y tipografía --- */
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background-color: #ffffff;
+  color: #222;
+  margin: 0;
+  padding: 0;
+}
+
+/* --- Encabezado con logo y título --- */
+#textoEncabezado {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 10px;
+  background-color: #222;
+  color: white;
+  font-size: 24px;
+}
+
+#imgLogo {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid white;
+}
+
+/*donde se muestran lo productos*/
+.tabla-wrapper {
+  max-height: 500px;        /* altura Máxima */
+  overflow-y: visible;      /* permite seguir bajando */
+  overflow-x: hidden;
+  margin-bottom: 120px;     /* deja espacio para footer e info */
+}
+
+/* --- Título principal --- */
+h2 {
+  text-align: center;
+  color: #cfa13f; /* Dorado */
+  margin-top: 30px;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+/* --- Tabla menú --- */
+table {
+  width: 80%;
+  margin: 30px auto;
+  border-collapse: collapse;
+  background-color: #414141;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 0 15px rgba(0,0,0,0.3);
+  color: white;
+}
+
+th {
+  background-color: #1f1f1f;
+  color: #cfa13f;
+  padding: 12px;
+  text-transform: uppercase;
+  font-size: 14px;
+  border-bottom: 1px solid #444;
+}
+
+td {
+  padding: 12px;
+  border-bottom: 1px solid #444;
+  text-align: left;
+}
+
+tr:hover {
+  background-color: #3a3a3a;
+}
+
+table img {
+  width: 150px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid #444;
+  cursor: pointer;
+}
+
+/* --- Botón menú hamburguesa --- */
+#btnMenuHamburguesa {
+  font-size: 28px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  color: #789c08;
+  position: fixed;
+ left: 0;                /* pegado al lado izquierdo */
+  top: 50%;               /* mitad de la pantalla */
+  transform: translateY(-50%); /* lo centra exactamente vertical */
+  z-index: 10001;
+  border-radius: 0 10px 10px 0;
+  padding: 12px 16px;
+  box-shadow: 2px 2px 8px rgba(0,0,0,0.4);
+  animation: pulse 2s infinite;
+}
+
+
+@keyframes pulse {
+  0%, 100% { transform: translateY(-50%) scale(1); }
+  50% { transform: translateY(-50%) scale(1.1); }
+}
+
+/* --- Modal imagen --- */
+#modalImagen {
+  display: none;
+  position: fixed;
+  z-index: 9999;
+  top: 0; left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0,0,0,0.7);
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+#modalImagen.visible {
+  display: flex;
+}
+
+#modalImagen img {
+  width: 90%;
+  max-width: 600px;
+  height: auto;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  background-color: #f2f2f2;
+  object-fit: cover;
+}
+
+#modalTitulo {
+  color: white;
+  margin-bottom: 10px;
+}
+
+#detallesProducto {
+  font-size: 16px;
+  color: #dbdbdb;
+  font-weight: 500;
+  line-height: 1.5;
+  text-align: center;
+}
+
+#modalImagen .cerrarBtn {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 20px;
+  background: #c40505;
+  border: none;
+  padding: 5px 10px;
+  color: white;
+  border-radius: 5px;
+}
+
+/* --- Input error --- */
+.input-error {
+  border: 2px solid red;
+  background-color: #ffe5e5;
+}
+
+/* --- Contador carrito --- */
+#n_productos {
+  background-color: white;
+  color: red;
+  border: 2px solid red;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  font-size: 14px;
+  text-align: center;
+  line-height: 20px;
+  font-weight: bold;
+  margin-right: 8px;
+  display: inline-block;
+}
+
+/* --- Iconos y carrito --- */
+.iconos, .carrito {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 10px auto;
+  gap: 8px;
+  font-weight: bold;
+  font-size: 18px;
+  color: black;
+}
+
+/* --- Menú lateral --- */
+#menuLateral {
+  display: none;
+  position: fixed;
+  top: 0; left: 0;
+  width: 250px;
+  height: 100%;
+  background: #333;
+  color: white;
+  padding: 20px;
+  z-index: 10000;
+  overflow-y: auto;
+  box-shadow: 3px 0 10px rgba(0,0,0,0.5);
+   
+}
+/* Quitar puntos de las listas */
+#menuLateral ul {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+}
+/* Estilo opcional para tus botones dentro del menú */
+#menuLateral li button {
+  width: 100%;
+  padding: 10px;
+  background: #555;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+#menuLateral li button:hover {
+  background: #789c08;
+}
+
+
+
+/* Botón cerrar del menú lateral */
+#cerrarMenu {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 20px;
+  background: #444;           /* color similar a los botones del menú */
+  color: white;
+  border: none;
+  font-size: 18px;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: left;           /* ícono a la izquierda */
+}
+
+#cerrarMenu:hover {
+  background: #789c08;        /* mismo hover que las categorías */
+}
+
+
+#listaCategorias button {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.05); /* fondo semitransparente elegante */
+  color: #f5f5f5; /* texto claro */
+  border: 1px solid rgba(207, 161, 63, 0.4); /* borde dorado suave */
+  padding: 12px 15px;
+  font-size: 17px;
+  margin-bottom: 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  transition: all 0.3s ease;
+}
+
+#listaCategorias button:hover {
+  background: #cfa13f;      /* dorado al pasar el mouse */
+  color: #111;              /* texto oscuro para contraste */
+  transform: translateX(5px); /* pequeño movimiento */
+  box-shadow: 2px 2px 10px rgba(207,161,63,0.4); /* brillo dorado */
+
+}
+
+
+/* --- Formulario ID pedido --- */
+.login-id {
+  text-align: center;
+  margin: 20px auto;
+  font-size: 18px;
+  color: black;
+}
+
+.login-id input {
+  padding: 5px;
+  font-size: 16px;
+  width: 200px;
+}
+
+.login-id button {
+  padding: 6px 12px;
+  margin-left: 10px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+/* --- Animaciones --- */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+
+
+
+/* Modal cantidad */
+.modal-cantidad {
+  display: none; /* 🔒 Oculto al inicio */
+  position: fixed;
+  z-index: 15000;
+  top: 0; left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0,0,0,0.5);
+
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-cantidad.active {
+  display: flex; /* ✅ Visible solo cuando se activa */
+}
+
+.modal-inner {
+  background-color: white;
+  padding: 20px 30px;
+  border-radius: 10px;
+  width: 320px;
+  max-width: 90%;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+  text-align: center;
+}
+
+/* Fondo del modal */
+.modal-info {
+  display: none;
+  position: fixed;
+  z-index: 99999;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.6);
+  justify-content: center;
+  align-items: center;
+}
+
+/* Caja del modal */
+.modal-contenido {
+  background: white;
+  color: #333;
+  padding: 20px 25px;
+  width: 90%;
+  max-width: 380px;
+  border-radius: 10px;
+  box-shadow: 0 0 15px rgba(0,0,0,0.4);
+  animation: aparecer 0.25s ease-out;
+  position: relative;
+}
+
+/* Animación */
+@keyframes aparecer {
+  from { transform: scale(0.7); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* Botón cerrar */
+.cerrar-info {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 26px;
+  cursor: pointer;
+  color: #555;
+}
+
+.cerrar-info:hover {
+  color: #000;
+}
+
+/* Botón flotante Info */
+.boton-flotante.info {
+  background: #789c08;
+  color: white;
+  padding: 10px 15px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  border: none;
+  cursor: pointer;
+}
+
+.boton-flotante.info:hover {
+  background: #41423f;
+}
+
+
+#footerSitio {
+  background-color: #111; /* fondo negro intenso */
+  color: #fff;
+  padding: 40px 20px;
+  font-family: 'Arial', sans-serif;
+  text-align: center;
+}
+
+#footerSitio a {
+  color: #ffcc00; /* amarillo para destacar enlaces */
+  text-decoration: none;
+  transition: 0.3s;
+}
+
+#footerSitio a:hover {
+  color: #fff; /* cambia a blanco al pasar el mouse */
+}
+
+.footer-contenido {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.footer-logo h2 {
+  font-size: 1.8em;
+  margin-bottom: 5px;
+}
+
+.footer-logo p {
+  font-size: 1em;
+  margin-bottom: 15px;
+  color: #ccc;
+}
+
+.footer-contacto p {
+  margin: 5px 0;
+}
+
+.footer-redes {
+  margin: 20px 0;
+}
+
+.footer-redes a {
+  font-size: 1.5em;
+  margin: 0 10px;
+}
+
+.footer-copy {
+  font-size: 0.9em;
+  color: #888;
+  margin-top: 20px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .footer-redes a {
+    font-size: 1.2em;
+    margin: 0 8px;
+  }
+}

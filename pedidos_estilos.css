@@ -1,0 +1,128 @@
+/* ===== GENERAL ===== */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
+    margin: 0;
+    padding: 20px;
+    color: #333;
+}
+
+h1 {
+    text-align: center;
+    color: #444;
+    margin-bottom: 20px;
+}
+
+/* ===== ACORDEONES DE PEDIDOS ===== */
+.accordion-group {
+    background-color: #fff;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.accordion-header {
+    padding: 12px 20px;
+    background-color: #007bff;
+    color: white;
+    font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.accordion-header:hover {
+    background-color: #0056b3;
+}
+
+.accordion-icon {
+    font-size: 18px;
+    transition: transform 0.3s;
+}
+
+.accordion-content {
+    padding: 10px 20px;
+    background-color: #f1f3f5;
+    border-top: 1px solid #ddd;
+}
+
+/* ===== TABLA DE PEDIDOS ===== */
+.pedido-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 10px;
+}
+
+.pedido-table th, .pedido-table td {
+    padding: 8px 12px;
+    text-align: center;
+    border-bottom: 1px solid #ddd;
+}
+
+.pedido-table th {
+    background-color: #e9ecef;
+}
+
+.pedido-table td button {
+    padding: 4px 8px;
+    border: none;
+    background-color: #28a745;
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.pedido-table td button:hover {
+    background-color: #218838;
+}
+
+/* ===== RESUMEN DEL PEDIDO ===== */
+.resumen-pedido p {
+    margin: 4px 0;
+    font-weight: bold;
+}
+
+.resumen-pedido span {
+    color: #007bff;
+}
+
+/* ===== BOTONES PRINCIPALES ===== */
+button {
+    padding: 8px 14px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.3s;
+}
+
+button:hover {
+    opacity: 0.85;
+}
+
+button.listo {
+    background-color: #ffc107;
+    color: white;
+}
+
+button.truncate {
+    background-color: #dc3545;
+    color: white;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+    .accordion-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .pedido-table th, .pedido-table td {
+        font-size: 14px;
+        padding: 6px 8px;
+    }
+}
