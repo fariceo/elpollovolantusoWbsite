@@ -33,28 +33,59 @@ if ($row = mysqli_fetch_assoc($result)) {
 
 <body data-usuario="<?= isset($_SESSION['usuario']) ? htmlspecialchars($_SESSION['usuario']) : '' ?>">
 
-  <h2 id="textoEncabezado">
-    <a href="admin.php"><img id="imgLogo" src="imagenes/logo.jpeg"></a>
-    Menú del Restaurante
-  </h2>
+  <div id="textoEncabezado">
+    <div class="encabezado-contenido">
 
-  
- 
-  
+      <h2>
+          Menú del Restaurante
+        <a href="admin.php"><img id="imgLogo" src="imagenes/logo.jpeg"></a>
+     
+      </h2>
+
+      <?php if (isset($_SESSION['usuario'])): ?>
+
+        <?php
+        $consulta = $conexion->prepare("SELECT COUNT(*) AS cantidad FROM pedidos WHERE usuario = ? AND estado != 2");
+        $consulta->bind_param("s", $_SESSION['usuario']);
+        $consulta->execute();
+        $res = $consulta->get_result()->fetch_assoc();
+        $pendientes = $res['cantidad'];
+        ?>
+
+      <?php else: ?>
+
+        <!-- Formulario para ingresar usuario -->
+        <div class="login-id">
+          <input type="text" id="pedidoId" placeholder="Ingrese tu ID">
+          <button id="guardarUsuario">Intro</button>
+          <div id="errorPedidoId"></div>
+        </div>
+
+      <?php endif; ?>
+
+    </div>
+  </div>
+
+
   <!-- Contenedor botones laterales -->
-<div class="botones-laterales">
-  <button id="btnMenuHamburguesa">
-    <i class="fas fa-utensils"></i>
-  </button>
+  <div class="botones-laterales">
+    <button id="btnMenuHamburguesa">
+      <i class="fas fa-utensils"></i>
+    </button>
 
-   <!-- Botón lupa -->
-  <button id="btnBuscar" style="margin-left:10px; font-size:20px; cursor:pointer;">
-  <i class="fas fa-search"></i>
-</button>
+    <!-- Botón lupa -->
+    <button id="btnBuscar" style="margin-left:10px; font-size:20px; cursor:pointer;">
+      <i class="fas fa-search"></i>
+    </button>
 
+    <?php if (isset($_SESSION['usuario'])): ?>
+      <div class="carrito carrito-lateral">
+        <div id="n_productos"><?= $pendientes ?></div>
+        <a href="asi_sistema/info/carrito/carrito.php"><img src="imagenes/icono_chef.png" style="width:40px;height:40px"></a>
+      </div>
+    <?php endif; ?>
 
-
-</div>
+  </div>
 
   <!-- Input de búsqueda oculto -->
   <div id="contenedorBusqueda">
@@ -64,11 +95,7 @@ if ($row = mysqli_fetch_assoc($result)) {
 
 
   <?php if (isset($_SESSION['usuario'])): ?>
-    <!-- Usuario logueado -->
-    <div class="iconos">
-      <a id="cerrarSesion" href="sesion/cerrar_sesion.php">👤 <?= htmlspecialchars($_SESSION['usuario']) ?></a>
-      <input type="hidden" id="pedidoId" value="<?= htmlspecialchars($_SESSION['usuario']) ?>">
-    </div>
+   
 
     <?php
     $consulta = $conexion->prepare("SELECT COUNT(*) AS cantidad FROM pedidos WHERE usuario = ? AND estado != 2");
@@ -78,20 +105,8 @@ if ($row = mysqli_fetch_assoc($result)) {
     $pendientes = $res['cantidad'];
     ?>
 
-    <div class="carrito">
-      <div id="n_productos"><?= $pendientes ?></div>
-      <a href="asi_sistema/info/carrito/carrito.php">🛒</a>
-    </div>
-
   <?php else: ?>
 
-    <!-- Formulario para ingresar usuario -->
-    <div class="login-id">
-
-      <input type="text" id="pedidoId" placeholder="Ingrese tu ID">
-      <button id="guardarUsuario">Intro</button>
-      <div id="errorPedidoId"></div>
-    </div>
 
   <?php endif; ?>
 
@@ -106,9 +121,9 @@ if ($row = mysqli_fetch_assoc($result)) {
   <!-- Tabla -->
   <div class="tabla-wrapper" id="zonaProductos">
     <table id="tablaMenu">
-        <tbody></tbody>
+      <tbody></tbody>
     </table>
-</div>
+  </div>
 
   <!-- Modal cantidad -->
   <div id="modalCantidad" style="display: none; position: fixed; top: 0; left: 0;
@@ -283,8 +298,8 @@ if ($row = mysqli_fetch_assoc($result)) {
   </footer>
 
   <script>
-               // Actualizar automáticamente el año
-               document.getElementById("footerYear").textContent = new Date().getFullYear();
+    // Actualizar automáticamente el año
+    document.getElementById("footerYear").textContent = new Date().getFullYear();
   </script>
 
 

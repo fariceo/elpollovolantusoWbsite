@@ -1,11 +1,25 @@
-/* --- Reset básico y tipografía --- */
+/* ============================= */
+/* RESET BÁSICO Y ESTRUCTURA     */
+/* ============================= */
 body {
   margin: 0;
-  padding-top: 90px; /* altura aproximada del encabezado */
+  padding-top: 90px;
+  /* espacio para el encabezado fijo */
   background: #f8f8f8;
+  font-family: 'Segoe UI', sans-serif;
 }
 
-/* --- Encabezado con logo y título --- */
+.oculto {
+  display: none !important;
+}
+
+.modal-info {
+  display: none;
+}
+
+/* ============================= */
+/* ENCABEZADO                    */
+/* ============================= */
 #textoEncabezado {
   position: fixed;
   top: 0;
@@ -22,9 +36,9 @@ body {
   padding: 12px 16px;
 
   background: #ffffff;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
 }
-/* Efecto para ocultar suavemente lo que sube */
+
 #textoEncabezado::after {
   content: "";
   position: absolute;
@@ -32,9 +46,10 @@ body {
   bottom: -20px;
   width: 100%;
   height: 20px;
-  background: linear-gradient(to bottom, #ffffff, rgba(255,255,255,0));
+  background: linear-gradient(to bottom, #ffffff, rgba(255, 255, 255, 0));
   pointer-events: none;
 }
+
 #imgLogo {
   width: 60px;
   height: 60px;
@@ -43,22 +58,24 @@ body {
   border: 2px solid #fff;
 }
 
-/* --- Botón menú hamburguesa --- */
-/* Contenedor vertical de botones */
+/* ============================= */
+/* BOTONES LATERALES             */
+/* ============================= */
 .botones-laterales {
   position: fixed;
-  left: 0px;
+  left: 0;
   top: 50%;
   transform: translateY(-50%);
   z-index: 10001;
 
   display: flex;
   flex-direction: column;
-  gap: 12px; /* separación entre botones */
+  gap: 12px;
 }
 
-/* Botón menú */
-#btnMenuHamburguesa {
+#btnMenuHamburguesa,
+#btnBuscar,
+.carrito-lateral {
   font-size: 28px;
   cursor: pointer;
   background: none;
@@ -67,56 +84,34 @@ body {
   background-color: white;
   border-radius: 0 10px 10px 0;
   padding: 12px 16px;
-  box-shadow: 2px 2px 8px rgba(0,0,0,0.4);
+  box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.4);
   animation: pulse 2s infinite;
   left: 0;
 }
 
-/* Botón buscar */
-#btnBuscar {
-  font-size: 28px;
-  cursor: pointer;
-  background: none;
-  border: none;
-  color: #789c08;
-  background-color: white;
-  border-radius: 0 10px 10px 0;
-  padding: 12px 16px;
-  box-shadow: 2px 2px 8px rgba(0,0,0,0.4);
-  animation: pulse 2s infinite;
-  left: 0;
-}
-
-/* Efecto hover */
 #btnBuscar:hover,
-#btnMenuHamburguesa:hover {
+#btnMenuHamburguesa:hover,
+.carrito-lateral:hover {
   transform: scale(1.05);
 }
 
-/* Animación */
-@keyframes pulse {
-  0% {
-    box-shadow: 0 0 0 0 rgba(120, 156, 8, 0.6);
-  }
-  70% {
-    box-shadow: 0 0 0 12px rgba(120, 156, 8, 0);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(120, 156, 8, 0);
-  }
-}
-/* Contenedor del input oculto */
+/* ============================= */
+/* BUSCADOR                      */
+/* ============================= */
 #contenedorBusqueda {
   display: none;
   position: fixed;
-  left: 80px;          /* aparece a la derecha de los botones */
-  top: 50%;            /* mitad vertical */
-  transform: translateY(-50%);
+  left: 80px;
+  top: 50%;
+  transform: translateY(-20%);
   z-index: 10002;
   animation: aparecerBusqueda 0.25s ease;
 }
 
-/* Input */
+#contenedorBusqueda.mostrar {
+  display: block;
+}
+
 #inputBuscar {
   width: 220px;
   padding: 12px 14px;
@@ -124,59 +119,26 @@ body {
   border-radius: 12px;
   outline: none;
   font-size: 15px;
-  box-shadow: 2px 2px 8px rgba(0,0,0,0.25);
+  box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.25);
   background: white;
   text-align: center;
 }
 
-/* Mostrar input */
-#contenedorBusqueda.mostrar {
-  display: block;
-}
-
-/* Tabla normal */
+/* ============================= */
+/* ZONA PRODUCTOS                */
+/* ============================= */
 #zonaProductos {
-  transition: opacity 0.3s ease, filter 0.3s ease;
+  scroll-margin-top: 120px;
 }
 
-/* Cuando el buscador está abierto */
-#zonaProductos.opacado {
-  opacity: 0.25;
-  filter: blur(1.5px);
-  pointer-events: none;
+.zona-activa {
+  animation: resaltarZona 0.5s ease;
 }
 
-/* Animación */
-@keyframes aparecerBusqueda {
-  from {
-    opacity: 0;
-    transform: translateY(-50%) translateX(-15px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(-50%) translateX(0);
-  }
-}
-
-/* Pulse */
-@keyframes pulse {
-  0% {
-    box-shadow: 0 0 0 0 rgba(120, 156, 8, 0.5);
-  }
-  70% {
-    box-shadow: 0 0 0 10px rgba(120, 156, 8, 0);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(120, 156, 8, 0);
-  }
-}
-
-
-/* --- Tabla menú tipo tarjetas --- */
 .tabla-wrapper {
   max-width: 1200px;
-  margin: 20px auto 140px auto;
-  padding: 0 16px;
+  margin: 60px auto 140px auto;
+  padding: 0 20px;
 
   display: flex;
   flex-wrap: wrap;
@@ -186,11 +148,14 @@ body {
   position: relative;
   z-index: 1;
 }
+
 #tablaMenu tbody {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 20px;
   padding: 0;
+  width: 100%;
 }
 
 #tablaMenu tbody tr {
@@ -198,16 +163,17 @@ body {
   flex-direction: column;
   background-color: #fff;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   overflow: hidden;
   cursor: pointer;
   width: 220px;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  margin: 0 auto;
 }
 
 #tablaMenu tbody tr:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 18px rgba(0,0,0,0.25);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.25);
 }
 
 #tablaMenu img {
@@ -225,11 +191,13 @@ body {
   color: #222;
 }
 
-/* --- Carrito y contador --- */
+/* ============================= */
+/* CARRITO / ICONOS              */
+/* ============================= */
 #n_productos {
-  background-color: #fff;
-  color: #e60000;
-  border: 2px solid #e60000;
+  background-color: #789c08;
+  color: #636363;
+  border: 2px solid #636363;
   border-radius: 50%;
   width: 26px;
   height: 26px;
@@ -240,7 +208,8 @@ body {
   margin-right: 8px;
 }
 
-.iconos, .carrito {
+.iconos,
+.carrito {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -250,19 +219,27 @@ body {
   font-size: 18px;
 }
 
-/* --- Menú lateral --- */
+/* ============================= */
+/* MENÚ LATERAL                  */
+/* ============================= */
 #menuLateral {
   display: none;
   position: fixed;
-  top: 0; left: 0;
-  width: 260px;
-  height: 100%;
+  top: 0;
+  left: 0;
+  width: 100px;
+  height: 100vh;
   background: #333;
   color: white;
   padding: 20px;
-  z-index: 10000;
+  z-index: 99999;
   overflow-y: auto;
-  box-shadow: 3px 0 15px rgba(0,0,0,0.5);
+  box-shadow: 3px 0 15px rgba(0, 0, 0, 0.5);
+  transition: left 0.3s ease;
+}
+
+#menuLateral.activo {
+  left: 0;
 }
 
 #menuLateral ul {
@@ -289,10 +266,12 @@ body {
   background: #cfa13f;
   color: #111;
   transform: translateX(5px);
-  box-shadow: 2px 2px 10px rgba(207,161,63,0.4);
+  box-shadow: 2px 2px 10px rgba(207, 161, 63, 0.4);
 }
 
-/* --- Modal cantidad --- */
+/* ============================= */
+/* MODALES                       */
+/* ============================= */
 #modalCantidad .modal-inner {
   background-color: #fff;
   padding: 20px 25px;
@@ -300,10 +279,9 @@ body {
   width: 320px;
   max-width: 90%;
   text-align: center;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
 }
 
-/* --- Modal detalles producto --- */
 #modalDetalles div {
   background: #fff;
   width: 90%;
@@ -324,7 +302,9 @@ body {
   margin-bottom: 12px;
 }
 
-/* --- Footer --- */
+/* ============================= */
+/* FOOTER                        */
+/* ============================= */
 #footerSitio {
   background-color: #111;
   color: #fff;
@@ -377,89 +357,54 @@ body {
   color: #888;
   margin-top: 20px;
 }
-/* --- Contenedor de tarjetas --- */
-body {
-  margin: 0;
-  padding-top: 90px; /* espacio para el encabezado fijo */
-  background: #f8f8f8;
-  font-family: 'Segoe UI', sans-serif;
+
+/* ============================= */
+/* ANIMACIONES                   */
+/* ============================= */
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(120, 156, 8, 0.5);
+  }
+
+  70% {
+    box-shadow: 0 0 0 10px rgba(120, 156, 8, 0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(120, 156, 8, 0);
+  }
 }
 
-/* --- Encabezado con logo y título --- */
-#textoEncabezado {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  z-index: 9999;
+@keyframes aparecerBusqueda {
+  from {
+    opacity: 0;
+    transform: translateY(-50%) translateX(-15px);
+  }
 
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-
-  margin: 0;
-  padding: 12px 16px;
-
-  background: #ffffff;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+  to {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
+  }
 }
 
-/* Efecto para ocultar suavemente lo que sube */
-#textoEncabezado::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  bottom: -20px;
-  width: 100%;
-  height: 20px;
-  background: linear-gradient(to bottom, #ffffff, rgba(255,255,255,0));
-  pointer-events: none;
+@keyframes resaltarZona {
+  0% {
+    transform: scale(0.98);
+    opacity: 0.75;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
-/* Contenedor de productos */
-.tabla-wrapper {
-  max-width: 1200px;
-  margin: 20px auto 140px auto;
-  padding: 0 16px;
-
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 20px;
-
-  position: relative;
-  z-index: 1;
-}
-
-/* --- Cuerpo de tabla --- */
-#tablaMenu tbody {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center; /* centrado horizontal */
-  gap: 20px;
-  padding: 0;
-  width: 100%; /* para que no quede desalineado */
-}
-
-/* --- Tarjetas --- */
-#tablaMenu tbody tr {
-  display: flex;
-  flex-direction: column;
-  background-color: #fff;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  overflow: hidden;
-  cursor: pointer;
-  width: 220px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  margin: 0 auto; /* asegura centrado en dispositivos pequeños */
-}
-
-/* --- Responsive --- */
+/* ============================= */
+/* RESPONSIVE                    */
+/* ============================= */
 @media (max-width: 768px) {
   #tablaMenu tbody tr {
-    width: 48%; /* un poco más ancho para móviles */
+    width: 48%;
     margin: 0 auto;
   }
 }
@@ -467,6 +412,26 @@ body {
 @media (max-width: 480px) {
   #tablaMenu tbody tr {
     width: 90%;
-    margin: 0 auto; /* centrado total */
+    margin: 0 auto;
   }
+}
+
+.producto-card {
+  overflow: hidden;
+  border-radius: 12px;
+}
+
+.producto-img {
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.35s ease, filter 0.35s ease;
+  will-change: transform;
+}
+
+/* Cuando pasa por el centro de pantalla */
+.producto-card.enfocada .producto-img {
+  transform: scale(1.08);
+  filter: brightness(1.05);
 }

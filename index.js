@@ -16,6 +16,7 @@ window.addEventListener('DOMContentLoaded', () => {
     // Mostrar productos por categoría
     // Cargar categorías
     function cargarCategorias() {
+        
         fetch('index/obtener_categorias.php')
             .then(res => res.json())
             .then(data => {
@@ -36,29 +37,35 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
     // Mostrar productos por categoría
-    function mostrarPorCategoria(cat, categoriasDisponibles = []) {
-        $.post('index/buscar_por_categoria.php', { categoria: cat })
-            .done(html => {
-                const tbody = document.querySelector('tbody');
-                tbody.innerHTML = html;
+    function mostrarPorCategoria(categoria) {
+    const zonaProductos = document.getElementById('zonaProductos');
+    const tbody = document.querySelector('#tablaMenu tbody');
+    const encabezado = document.getElementById('textoEncabezado');
 
-                // Si no hay productos, intentar con otra categoría disponible
-                if (!html.trim() && categoriasDisponibles.length > 0) {
-                    // Quitar la categoría que falló
-                    const otrasCategorias = categoriasDisponibles.filter(c => c !== cat);
-                    if (otrasCategorias.length > 0) {
-                        mostrarPorCategoria(otrasCategorias[0], otrasCategorias);
-                    } else {
-                        tbody.innerHTML = '<tr><td colspan="5">No hay productos disponibles.</td></tr>';
-                    }
-                }
-            });
+    if (!zonaProductos || !tbody || !encabezado) return;
 
-        document.getElementById('menuLateral').style.display = 'none';
+    // Limpiar tabla antes de cargar
+    tbody.innerHTML = '';
 
-        // ⬅️ MOSTRAR BOTÓN DE NUEVO
-        document.getElementById('btnMenuHamburguesa').style.display = 'block';
-    }
+    // Subir scroll al inicio de productos
+    const alturaHeader = encabezado.offsetHeight + 20;
+    const posicionTabla = zonaProductos.offsetTop - alturaHeader;
+
+    window.scrollTo({
+        top: posicionTabla,
+        behavior: 'smooth'
+    });
+
+    // Cargar productos de la categoría
+    $.post('index/buscar_por_categoria.php', { categoria: categoria }, (html) => {
+        tbody.innerHTML = html;
+
+        // Reiniciar scroll interno de la tabla si existe
+        zonaProductos.scrollTop = 0;
+    }).fail(() => {
+        tbody.innerHTML = '<tr><td colspan="5">Error al cargar productos.</td></tr>';
+    });
+}
 
 
     // ================================
@@ -189,15 +196,26 @@ window.addEventListener('DOMContentLoaded', () => {
     });
 
     // Menú lateral
-    document.getElementById('btnMenuHamburguesa').addEventListener('click', () => {
-        document.getElementById('menuLateral').style.display = 'block';
-        document.getElementById('btnMenuHamburguesa').style.display = 'none';  // 👈 se oculta
+document.getElementById('btnMenuHamburguesa').addEventListener('click', function (e) {
+    e.stopPropagation();
+    document.getElementById('menuLateral').style.display = 'block';
+    document.getElementById('botones-laterales').style.display = 'none';
+});
 
-    });
+document.getElementById('cerrarMenu').addEventListener('click', function (e) {
+    e.stopPropagation();
+    document.getElementById('menuLateral').style.display = 'none';
+});
 
-    document.getElementById('cerrarMenu').addEventListener('click', () => {
-        document.getElementById('menuLateral').style.display = 'none';
-    });
+// Evita que clics dentro del menú lo cierren
+document.getElementById('menuLateral').addEventListener('click', function (e) {
+    e.stopPropagation();
+});
+
+// Cerrar al hacer clic fuera
+document.addEventListener('click', function () {
+    document.getElementById('menuLateral').style.display = 'none';
+});
 
     cargarCategorias();
 });
@@ -263,20 +281,30 @@ document.addEventListener("DOMContentLoaded", () => {
 
 window.addEventListener('DOMContentLoaded', () => {
     const inputBuscar = document.getElementById('inputBuscar');
-    
+    const zonaProductos = document.getElementById('zonaProductos');
+    const tbody = document.querySelector('#tablaMenu tbody');
+    const encabezado = document.getElementById('textoEncabezado');
+
+    if (!inputBuscar || !zonaProductos || !tbody || !encabezado) return;
+
     inputBuscar.addEventListener('input', () => {
         const nombre = inputBuscar.value.trim();
 
-        const tbody = document.querySelector('#tablaMenu tbody'); // <-- contenedor de la tabla
-
         if (nombre.length === 0) {
-            tbody.innerHTML = ''; // limpiar si no hay texto
+            tbody.innerHTML = '';
             return;
         }
 
-        // Enviar búsqueda al PHP
+        const alturaHeader = encabezado.offsetHeight + 20;
+        const posicionTabla = zonaProductos.offsetTop - alturaHeader;
+
+        window.scrollTo({
+            top: posicionTabla,
+            behavior: 'smooth'
+        });
+
         $.post('index/buscar_por_categoria.php', { nombre: nombre }, (html) => {
-            tbody.innerHTML = html; // mostrar productos en la tabla
+            tbody.innerHTML = html;
         }).fail(() => {
             tbody.innerHTML = '<tr><td colspan="5">Error al buscar productos.</td></tr>';
         });
@@ -296,6 +324,8 @@ window.addEventListener('DOMContentLoaded', () => {
 
             if (contenedorBusqueda.classList.contains("mostrar")) {
                 inputBuscar.focus();
+            } else {
+                inputBuscar.value = "";
             }
         });
 
@@ -307,6 +337,36 @@ window.addEventListener('DOMContentLoaded', () => {
         // Ocultar si se hace clic fuera
         document.addEventListener("click", function () {
             contenedorBusqueda.classList.remove("mostrar");
+            inputBuscar.value = ""; // limpiar texto
         });
     }
 });
+
+/*agranda la imagen al pasar por el centro de la pantalla*/
+
+function detectarProductoEnCentro() {
+    const cards = document.querySelectorAll('.producto-card');
+    const centroPantalla = window.innerHeight / 2;
+
+    cards.forEach(card => {
+        const rect = card.getBoundingClientRect();
+        const centroCard = rect.top + rect.height / 2;
+
+        const distancia = Math.abs(centroPantalla - centroCard);
+
+        if (distancia < 120) {
+            card.classList.add('enfocada');
+        } else {
+            card.classList.remove('enfocada');
+        }
+    });
+}
+
+// Ejecutar al cargar
+window.addEventListener('load', detectarProductoEnCentro);
+
+// Ejecutar al hacer scroll
+window.addEventListener('scroll', detectarProductoEnCentro);
+
+// Ejecutar al cambiar tamaño de pantalla
+window.addEventListener('resize', detectarProductoEnCentro);
