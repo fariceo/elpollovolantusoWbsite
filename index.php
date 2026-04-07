@@ -69,21 +69,24 @@ if ($row = mysqli_fetch_assoc($result)) {
 
   <!-- Contenedor botones laterales -->
   <div class="botones-laterales">
-    <button id="btnMenuHamburguesa">
+
+    <a id="btnMenuHamburguesa">
       <i class="fas fa-utensils"></i>
-    </button>
+      </a>
 
     <!-- Botón lupa -->
-    <button id="btnBuscar" style="margin-left:10px; font-size:20px; cursor:pointer;">
+    <a id="btnBuscar">
       <i class="fas fa-search"></i>
-    </button>
+      </a>
 
-    <?php if (isset($_SESSION['usuario'])): ?>
-      <div class="carrito carrito-lateral">
-        <div id="n_productos"><?= $pendientes ?></div>
-        <a href="asi_sistema/info/carrito/carrito.php"><img src="imagenes/icono_chef.png" style="width:40px;height:40px"></a>
-      </div>
-    <?php endif; ?>
+  <?php if (isset($_SESSION['usuario'])): ?>
+  <div class="carrito carrito-lateral">
+    <a href="asi_sistema/info/carrito/carrito.php" class="icono-carrito">
+      <i class="fas fa-shopping-cart"></i>
+      <span id="n_productos"><?= $pendientes ?></span>
+    </a>
+  </div>
+<?php endif; ?>
 
   </div>
 
